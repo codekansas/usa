@@ -4,7 +4,7 @@ ffmpeg-python
 ftfy
 imageio
 matplotlib
-ml-starter @ git+https://github.com/codekansas/ml-starter.git
+ml-starter
 more_itertools
 numpy
 numpy-quaternion
