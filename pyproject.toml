@@ -1,0 +1,83 @@
+[tool.black]
+
+line-length = 120
+target-version = ["py310"]
+include = '\.pyi?$'
+
+[tool.pytest.ini_options]
+
+addopts = "-rx -rf -x -q --full-trace"
+testpaths = ["tests"]
+
+markers = [
+    "slow: Marks test as being slow",
+    "has_gpu: Marks test as requiring a GPU to run",
+    "has_mps: Marks test as requiring an MPS device to run",
+]
+
+[tool.mypy]
+
+pretty = true
+show_column_numbers = true
+show_error_context = true
+show_error_codes = true
+show_traceback = true
+disallow_untyped_defs = true
+strict_equality = true
+allow_redefinition = true
+
+warn_unused_ignores = true
+warn_redundant_casts = true
+
+incremental = true
+namespace_packages = false
+
+# For TorchScript stuff.
+disable_error_code = ["attr-defined"]
+
+[[tool.mypy.overrides]]
+
+module = [
+    "_pytest.*",
+    "cv2.*",
+    "faiss.*",
+    "ffmpeg.*",
+    "liblzfse.*",
+    "matplotlib.*",
+    "open3d.*",
+    "pandas.*",
+    "PIL.*",
+    "pytest.*",
+    "quaternion.*",
+    "scipy.*",
+    "seaborn.*",
+    "torchvision.*",
+    "tqdm.*",
+]
+
+ignore_missing_imports = true
+
+[tool.isort]
+
+profile = "black"
+
+[tool.ruff]
+
+select = ["E", "F", "I", "W"]
+ignore = ["E712", "E731"]
+line-length = 120
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+target-version = "py310"
+
+[tool.ruff.per-file-ignores]
+
+"__init__.py" = ["E402", "F401", "F403", "F811"]
+
+[tool.ruff.mccabe]
+
+max-complexity = 10
+
+[tool.ruff.isort]
+
+known-first-party = ["project", "tests"]
+combine-as-imports = true
