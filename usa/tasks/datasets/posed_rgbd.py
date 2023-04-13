@@ -108,9 +108,12 @@ class Bounds:
     def from_xyz(cls, xyz: Tensor) -> Tensor:
         assert xyz.shape[-1] == 3
 
-        xmin, xmax = torch.aminmax(xyz[..., 0])
-        ymin, ymax = torch.aminmax(xyz[..., 1])
-        zmin, zmax = torch.aminmax(xyz[..., 2])
+        # Supports MPS tensors.
+        aminmax = lambda x: (x.min(), x.max()) if x.device.type == "mps" else tuple(torch.aminmax(x))
+
+        xmin, xmax = aminmax(xyz[..., 0])
+        ymin, ymax = aminmax(xyz[..., 1])
+        zmin, zmax = aminmax(xyz[..., 2])
 
         return torch.tensor([[xmin, xmax], [ymin, ymax], [zmin, zmax]], device=xyz.device, dtype=xyz.dtype)
 

@@ -30,6 +30,14 @@ from usa.tasks.datasets.utils import (
 logger = logging.getLogger(__name__)
 
 
+def aminmax(x: Tensor) -> tuple[Tensor, Tensor]:
+    if x.device.type == "mps":
+        return x.min(), x.max()
+    xmin, xmax = torch.aminmax(x)
+    return xmin, xmax
+
+
+
 def clip_sim(a: Tensor, b: Tensor) -> Tensor:
     assert a.dim() == 2 and b.dim() == 2
     a, b = a / (a.norm(dim=1, keepdim=True) + 1e-3), b / (b.norm(dim=1, keepdim=True) + 1e-3)
@@ -234,19 +242,19 @@ class ClipSdfTask(ml.SupervisedLearningTask[ClipSdfTaskConfig, Model, Batch, Out
             losses["clip"] = clip_loss
 
         # Logs the prediction ranges.
-        pmin, pmax = preds.aminmax()
+        pmin, pmax = aminmax(preds)
         self.logger.log_scalar("pmin", pmin)
         self.logger.log_scalar("pmax", pmax)
 
         if state.phase == "valid":
-            clip_image, sdf_image = self.get_clip_and_sdf_images(model, device, dtype)
-            self.logger.log_image("sdf", sdf_image)
+            # clip_image, sdf_image = self.get_clip_and_sdf_images(model, device, dtype)
+            # self.logger.log_image("sdf", sdf_image)
             self.logger.log_point_cloud("xyz", torch.stack([xyz, nearest_xyz.to(xyz)]))
             self.logger.log_point_cloud("surface", batch_xyz.to(xyz))
-            self.logger.log_labeled_images("query_sims", (clip_image, self.config.queries))
+            # self.logger.log_labeled_images("query_sims", (clip_image, self.config.queries))
 
-            if crop_image is not None:
-                self.logger.log_images("cropped", crop_image)
+            # if crop_image is not None:
+            #     self.logger.log_images("cropped", crop_image)
 
         return losses
 
@@ -289,7 +297,7 @@ class ClipSdfTask(ml.SupervisedLearningTask[ClipSdfTaskConfig, Model, Batch, Out
 
             # Normalizes CLIP similarity image to range (0, 1).
             clip_preds = clip_preds.softmax(dim=-1)
-            clip_min, clip_max = clip_preds.aminmax()
+            clip_min, clip_max = aminmax(clip_preds)
             clip_preds = (clip_preds - clip_min) / (clip_max - clip_min + 1e-3)
 
             # CLIP image has shape (num_embs, width, height)
