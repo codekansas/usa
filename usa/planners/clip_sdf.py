@@ -10,9 +10,9 @@ from ml.trainers.mixins.device.base import BaseDevice
 from torch import Tensor
 from torch.utils.data.dataset import Dataset
 
-from usa.evaluation.planners.base import Map, Planner, get_occupancy_map_from_dataset
-from usa.evaluation.planners.common import AStarPlanner as AStarPlannerBase, Heuristic
 from usa.models.point2emb import Point2EmbModel
+from usa.planners.base import Map, Planner, get_occupancy_map_from_dataset
+from usa.planners.common import AStarPlanner as AStarPlannerBase, Heuristic
 from usa.tasks.clip_sdf import ClipSdfTask
 from usa.tasks.datasets.types import PosedRGBDItem
 
@@ -378,8 +378,10 @@ class GradientPlanner(ClipSdfPlanner):
 
         # Optimization loop, just using gradient descent.
         prev_xys: Optional[Tensor] = None
+
         opt = torch.optim.Adam([xys], lr=self.lr)
         # opt = torch.optim.SGD([xys], lr=self.lr, momentum=0.9)
+
         for _ in tqdm.trange(self.num_optimization_steps):
             opt.zero_grad()
             losses = get_losses(xys)
@@ -388,9 +390,10 @@ class GradientPlanner(ClipSdfPlanner):
 
             # First point doesn't change, last point only changes if we have
             # a goal embedding rather than XY coordinate.
-            xys.grad[:1].zero_()
+            xys_grad = cast(Tensor, xys.grad)
+            xys_grad[:1].zero_()
             if target_emb is None:
-                xys.grad[-1:].zero_()
+                xys_grad[-1:].zero_()
 
             opt.step()
 
@@ -402,6 +405,7 @@ class GradientPlanner(ClipSdfPlanner):
             is_finished = prev_xys is not None and torch.allclose(xys, prev_xys, atol=self.min_distance)
             if is_finished:
                 break
+
             # if prev_xys is not None and i % 100 == 0:
             #     tqdm.tqdm.write(f"Losses: {losses}")
             #     tqdm.tqdm.write(f"diff: {(xys - prev_xys).norm().item()}")

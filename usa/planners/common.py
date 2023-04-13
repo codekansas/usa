@@ -5,7 +5,7 @@ from typing import Dict, List, Literal, Optional, Set, Tuple
 
 import numpy as np
 
-from usa.evaluation.planners.base import Map, Planner
+from usa.planners.base import Map, Planner
 
 Heuristic = Literal["manhattan", "euclidean", "octile", "chebyshev"]
 

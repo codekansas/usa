@@ -5,8 +5,8 @@ import cv2
 import numpy as np
 from torch.utils.data.dataset import Dataset
 
-from usa.evaluation.planners.base import Map, Planner, get_occupancy_map_from_dataset
-from usa.evaluation.planners.common import AStarPlanner as AStarPlannerBase, Heuristic
+from usa.planners.base import Map, Planner, get_occupancy_map_from_dataset
+from usa.planners.common import AStarPlanner as AStarPlannerBase, Heuristic
 from usa.tasks.datasets.types import PosedRGBDItem
 
 
