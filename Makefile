@@ -57,12 +57,8 @@ py-files := $$(git ls-files '*.py')
 format:
 	black $(py-files)
 	ruff --fix $(py-files)
+	jupyter nbconvert --clear-output --inplace notebooks/**/*.ipynb
 .PHONY: format
-
-format-cpp:
-	clang-format -i $$(git ls-files '*.cpp' '*.h')
-	cmake-format -i $$(git ls-files 'CMakeLists.txt' '*.cmake')
-.PHONY: format-cpp
 
 static-checks:
 	black --diff --check $(py-files)
