@@ -2,7 +2,7 @@ import argparse
 import logging
 import os
 from pathlib import Path
-from typing import List, Literal, Optional, Tuple, Type, cast, get_args
+from typing import Literal, Type, cast, get_args
 
 import numpy as np
 import open3d as o3d
@@ -31,9 +31,9 @@ def get_planner(
     model: Point2EmbModel,
     task: ClipSdfTask,
     planner_key: PlannerType,
-    floor_ceil_heights: Tuple[float, float],
+    floor_ceil_heights: tuple[float, float],
     device: Type[BaseDevice],
-    dataset: Optional[Dataset[PosedRGBDItem]] = None,
+    dataset: Dataset[PosedRGBDItem] | None = None,
 ) -> Planner:
     if dataset is None:
         dataset = cast(Dataset[PosedRGBDItem], task.get_dataset("train"))
@@ -67,19 +67,19 @@ def get_planner(
 
 
 def print_trajectories(
-    start_xy: Tuple[float, float],
-    goals: List[str],
+    start_xy: tuple[float, float],
+    goals: list[str],
     planner: Planner,
-    floor_ceil_heights: Tuple[float, float],
-    artifacts_dir: Optional[Path] = None,
-    dataset: Optional[Dataset[PosedRGBDItem]] = None,
+    floor_ceil_heights: tuple[float, float],
+    artifacts_dir: Path | None = None,
+    dataset: Dataset[PosedRGBDItem] | None = None,
     save_goals: bool = True,
 ) -> None:
     start_x, start_y = start_xy
     if not planner.is_valid_starting_point((start_x, start_y)):
         logger.warning("Starting point %s is not valid!", start_xy)
 
-    all_trajectories: List[List[Tuple[float, float]]] = []
+    all_trajectories: list[list[tuple[float, float]]] = []
     for goal in goals:
         trajectory = planner.plan(start_xy, end_goal=goal)
         start_xy = trajectory[-1]
@@ -154,7 +154,7 @@ def print_trajectories(
             point_cloud += traj_point_cloud
 
             # Adds the map.
-            planner_map_occupied: List[Tuple[float, float]] = []
+            planner_map_occupied: list[tuple[float, float]] = []
             ymax, xmax = planner_map.grid.shape[:2]
             for x in range(xmax):
                 for y in range(ymax):
@@ -253,7 +253,7 @@ def main() -> None:
 
     # Gets the starting XY coordinates, the goal locations and the artifacts directory from arguments.
     start_xy = float(args.xy[0]), float(args.xy[1])
-    goals = cast(List[str], args.goals.split(";"))
+    goals = cast(list[str], args.goals.split(";"))
     artifacts_dir = Path(args.artifacts_dir) if args.artifacts_dir else None
 
     print_trajectories(start_xy, goals, planner, floor_ceil_heights, artifacts_dir, dataset)

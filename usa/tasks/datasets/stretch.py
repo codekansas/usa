@@ -1,7 +1,7 @@
 import pickle as pkl
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, Tuple
+from typing import Any, Iterator
 
 import ml.api as ml
 import numpy as np
@@ -21,7 +21,7 @@ KITCHEN_CLIP_URL = "https://drive.google.com/file/d/133D0ydVu2I3ddS69qdoJ-5HtcRg
 CHESS_CLIP_URL = "https://drive.google.com/file/d/1ElpXCMclP9xocU1Kd5OyrtkO3UNSbzf8/view?usp=share_link"
 
 
-def iter_raw(path: Path) -> Iterator[Dict[str, Any]]:
+def iter_raw(path: Path) -> Iterator[dict[str, Any]]:
     with open(path, "rb") as f:
         while True:
             try:
@@ -33,8 +33,8 @@ def iter_raw(path: Path) -> Iterator[Dict[str, Any]]:
 @dataclass
 class OccupancyMap:
     image: np.ndarray
-    shape: Tuple[int, int]
-    origin: Tuple[float, float]
+    shape: tuple[int, int]
+    origin: tuple[float, float]
     resolution: float
 
 
@@ -44,15 +44,15 @@ class Data:
     depth_imgs: np.ndarray
     poses: np.ndarray
     intrinsics: np.ndarray
-    occupancy_maps: List[OccupancyMap]
+    occupancy_maps: list[OccupancyMap]
 
 
 def load_data(path: Path) -> Data:
-    color_imgs: List[np.ndarray] = []
-    depth_imgs: List[np.ndarray] = []
-    poses: List[np.ndarray] = []
-    intrinsics: List[np.ndarray] = []
-    occupancy_maps: List[OccupancyMap] = []
+    color_imgs: list[np.ndarray] = []
+    depth_imgs: list[np.ndarray] = []
+    poses: list[np.ndarray] = []
+    intrinsics: list[np.ndarray] = []
+    occupancy_maps: list[OccupancyMap] = []
     for data in tqdm.tqdm(iter_raw(path), disable=ml.is_distributed(), desc="Loading data"):
         color_img = data["color"]["image"]
         depth_img = data["depth"]["image"]
@@ -111,7 +111,7 @@ def load_data(path: Path) -> Data:
     )
 
 
-def load_pose(path: Path) -> Tuple[np.ndarray, List[Tuple[int, int]]]:
+def load_pose(path: Path) -> tuple[np.ndarray, list[tuple[int, int]]]:
     inds = np.genfromtxt(path, delimiter=",", skip_header=True, usecols=[2, 3], dtype=np.int64)
     poses = np.genfromtxt(path, delimiter=",", skip_header=True, usecols=[4, 5, 6, 7, 8, 9, 10])
     mat = np.eye(4, dtype=np.float64)[None, :, :].repeat(poses.shape[0], axis=0)
