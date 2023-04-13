@@ -79,5 +79,5 @@ max-complexity = 10
 
 [tool.ruff.isort]
 
-known-first-party = ["usa_net", "tests"]
+known-first-party = ["usa", "tests"]
 combine-as-imports = true

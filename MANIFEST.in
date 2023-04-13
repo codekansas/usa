@@ -1,2 +1,2 @@
 include requirements*.txt
-recursive-include usa_net/ *.txt *.cpp *.h *.cu *.cuh *.pyi MANIFEST.in
+recursive-include usa/ *.txt *.cpp *.h *.cu *.cuh *.pyi MANIFEST.in

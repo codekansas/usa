@@ -1,7 +1,20 @@
 # requirements.txt
 
-gymnasium[box2d]
-ml-starter
+ffmpeg-python
+ftfy
+imageio
+matplotlib
+ml-starter @ git+https://github.com/codekansas/ml-starter.git
+more_itertools
 numpy
+numpy-quaternion
+open3d
+opencv-python
+pandas
+pyliblzfse
 scipy
+seaborn
+timm
 torch>=2.0.0
+torchvision>=0.13.1
+typed-argument-parser
