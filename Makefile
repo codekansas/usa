@@ -56,8 +56,7 @@ py-files := $$(git ls-files '*.py')
 
 format:
 	black $(py-files)
-	ruff --fix $(py-files)
-	jupyter nbconvert --clear-output --inplace notebooks/**/*.ipynb
+	ruff --fix $(py-files)g
 .PHONY: format
 
 static-checks:

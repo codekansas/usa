@@ -125,9 +125,7 @@ class AStarPlanner(Planner):
             i = j
         return cleaned_path
 
-    def get_unoccupied_neighbor(
-        self, pt: tuple[int, int], goal_pt: tuple[int, int] | None = None
-    ) -> tuple[int, int]:
+    def get_unoccupied_neighbor(self, pt: tuple[int, int], goal_pt: tuple[int, int] | None = None) -> tuple[int, int]:
         if not self.point_is_occupied(*pt):
             return pt
 
