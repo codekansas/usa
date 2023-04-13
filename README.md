@@ -14,3 +14,12 @@ pip install usa-net
 
 - Python 3.10+
 - PyTorch 2.0+
+
+### Development
+
+Add this to your `.git/config` file to automatically clear the output of notebooks before committing:
+
+```ini
+[filter "strip-notebook-output"]
+  clean = "jupyter nbconvert --clear-output --to notebook --stdin --stdout --log-level=ERROR"
+```
