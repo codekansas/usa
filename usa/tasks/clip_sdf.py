@@ -18,6 +18,7 @@ from usa.models.clip import (
     cast_pretrained_model_key as cast_pretrained_clip_model_key,
     load_pretrained as load_pretrained_clip,
 )
+from usa.models.point2emb import Point2EmbModel
 from usa.tasks.datasets.posed_rgbd import Bounds, get_posed_rgbd_dataset
 from usa.tasks.datasets.types import PosedRGBDItem
 from usa.tasks.datasets.utils import (
@@ -27,6 +28,13 @@ from usa.tasks.datasets.utils import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+def aminmax(x: Tensor) -> tuple[Tensor, Tensor]:
+    if x.device.type == "mps":
+        return x.min(), x.max()
+    xmin, xmax = torch.aminmax(x)
+    return xmin, xmax
 
 
 def clip_sim(a: Tensor, b: Tensor) -> Tensor:
@@ -76,7 +84,7 @@ def get_image_crop_around(
 
 
 @dataclass
-class ClipSdfTaskConfig(ml.BaseTaskConfig):
+class ClipSdfTaskConfig(ml.SupervisedLearningTaskConfig):
     dataset: str = ml.conf_field(MISSING, help="Dataset key to use")
     clip_model: str = ml.conf_field(MISSING, help="The CLIP model to load")
     queries: list[str] = ml.conf_field(MISSING, help="Queries to evaluate against")
@@ -111,8 +119,14 @@ class ClipModel:
         self.tokenizer = CLIPTokenizer()
 
 
+Model = Point2EmbModel
+Batch = PosedRGBDItem
+Output = tuple[Tensor, Tensor]
+Loss = dict[str, Tensor]
+
+
 @ml.register_task("clip_sdf", ClipSdfTaskConfig)
-class ClipSdfTask(ml.BaseTask):
+class ClipSdfTask(ml.SupervisedLearningTask[ClipSdfTaskConfig, Model, Batch, Output, Loss]):
     bounds: Tensor
     pose_bounds: Tensor
     clip_text_embs: Tensor
@@ -154,18 +168,16 @@ class ClipSdfTask(ml.BaseTask):
     def slice_height(self) -> float:
         return (self.pose_bounds[1, 0] + self.pose_bounds[1, 1]).item() / 2
 
-    def run_model(
-        self,
-        model: ml.BaseModel,
-        batch: PosedRGBDItem,
-        state: ml.State,
-    ) -> tuple[Tensor, Tensor]:
+    def run_model(self, model: Model, batch: Batch, state: ml.State) -> tuple[Tensor, Tensor]:
         _, depth, mask, intrinsics, pose = batch
         depth_frac = torch.rand_like(depth) * (1 - self.config.min_depth_prct) + self.config.min_depth_prct
 
         # Sample XYZ points to run through the model.
         sample_mask = torch.rand_like(mask, dtype=depth.dtype)
-        q = torch.quantile(sample_mask.float(), self.config.points_to_sample / sample_mask.numel()).to(sample_mask)
+        q = torch.quantile(
+            (sample_mask.cpu() if mask.device.type == "mps" else sample_mask).float(),
+            self.config.points_to_sample / sample_mask.numel(),
+        ).to(sample_mask)
         mask = mask | (sample_mask > q)
         sampled_xyz = get_xyz_coordinates(depth_frac * depth, mask, pose, intrinsics).to(depth)
 
@@ -173,16 +185,10 @@ class ClipSdfTask(ml.BaseTask):
 
         return preds, sampled_xyz
 
-    def compute_loss(
-        self,
-        model: ml.BaseModel,
-        batch: PosedRGBDItem,
-        state: ml.State,
-        output: tuple[Tensor, Tensor],
-    ) -> dict[str, Tensor]:
+    def compute_loss(self, model: Model, batch: Batch, state: ml.State, output: Output) -> Loss:
         rgb, depth, mask, intrinsics, pose = batch
         preds, xyz = output
-        device, dtype = preds.device, preds.dtype
+        device = preds.device
 
         # Splits into CLIP and SDF predictions.
         clip_preds, sdf_preds = torch.split(preds, [self.clip.visual.output_dim, 1], dim=-1)
@@ -235,30 +241,21 @@ class ClipSdfTask(ml.BaseTask):
             losses["clip"] = clip_loss
 
         # Logs the prediction ranges.
-        pmin, pmax = preds.aminmax()
+        pmin, pmax = aminmax(preds)
         self.logger.log_scalar("pmin", pmin)
         self.logger.log_scalar("pmax", pmax)
 
         if state.phase == "valid":
-            clip_image, sdf_image = self.get_clip_and_sdf_images(model, device, dtype)
-            self.logger.log_image("sdf", sdf_image)
+            # clip_image, sdf_image = self.get_clip_and_sdf_images(model, device, preds.dtype)
+            # self.logger.log_image("sdf", sdf_image)
             self.logger.log_point_cloud("xyz", torch.stack([xyz, nearest_xyz.to(xyz)]))
             self.logger.log_point_cloud("surface", batch_xyz.to(xyz))
-            self.logger.log_labeled_images("query_sims", (clip_image, self.config.queries))
+            # self.logger.log_labeled_images("query_sims", (clip_image, self.config.queries))
 
-            if crop_image is not None:
-                self.logger.log_images("cropped", crop_image)
+            # if crop_image is not None:
+            #     self.logger.log_images("cropped", crop_image)
 
         return losses
-
-    def get_single_loss(self, loss: Tensor | dict[str, Tensor]) -> tuple[Tensor, list[str]]:
-        assert isinstance(loss, dict)
-        losses: list[Tensor] = [loss["sdf"].mean()]
-        keys: list[str] = ["sdf"]
-        if "clip" in loss:
-            losses += [loss["clip"].mean()]
-            keys += ["clip"]
-        return torch.stack(losses), keys
 
     def get_clip_and_sdf_images(
         self,
@@ -299,7 +296,7 @@ class ClipSdfTask(ml.BaseTask):
 
             # Normalizes CLIP similarity image to range (0, 1).
             clip_preds = clip_preds.softmax(dim=-1)
-            clip_min, clip_max = clip_preds.aminmax()
+            clip_min, clip_max = aminmax(clip_preds)
             clip_preds = (clip_preds - clip_min) / (clip_max - clip_min + 1e-3)
 
             # CLIP image has shape (num_embs, width, height)
