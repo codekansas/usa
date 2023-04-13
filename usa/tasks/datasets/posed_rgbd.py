@@ -172,13 +172,7 @@ def iter_xyz(ds: Dataset[PosedRGBDItem], desc: str, chunk_size: int = 16) -> Ite
         depth, mask, pose, intrinsics = (
             torch.stack(ts, dim=0)
             for ts in zip(
-                *(
-                    (
-                        device.tensor_to(t)
-                        for t in (i.depth, i.mask, i.pose, i.intrinsics)
-                    )
-                    for i in (ds[i] for i in inds)
-                )
+                *((device.tensor_to(t) for t in (i.depth, i.mask, i.pose, i.intrinsics)) for i in (ds[i] for i in inds))
             )
         )
         xyz = get_xyz(depth, mask, pose, intrinsics)
