@@ -2,7 +2,7 @@ import argparse
 import logging
 import os
 from pathlib import Path
-from typing import List, Tuple, Type, cast
+from typing import Type, cast
 
 import ml.api as ml
 import numpy as np
@@ -23,9 +23,9 @@ def visualize_semantics(
     model: Point2EmbModel,
     task: ClipSdfTask,
     device: Type[ml.BaseDevice],
-    floor_ceil_heights: Tuple[float, float],
+    floor_ceil_heights: tuple[float, float],
     dataset: Dataset[PosedRGBDItem],
-    goals: List[str],
+    goals: list[str],
     artifacts_dir: Path,
     resolution: float,
 ) -> None:
@@ -147,7 +147,7 @@ def main() -> None:
 
     # Gets the resolution, goal locations and artifacts directory from arguments.
     resolution = float(args.resolution)
-    goals = cast(List[str], args.goals.split(";"))
+    goals = cast(list[str], args.goals.split(";"))
     artifacts_dir = Path(args.artifacts_dir)
 
     visualize_semantics(model, task, device, floor_ceil_heights, dataset, goals, artifacts_dir, resolution)

@@ -3,7 +3,7 @@ import logging
 import os
 import time
 from pathlib import Path
-from typing import Iterator, Tuple
+from typing import Iterator
 
 import ml.api as ml
 import numpy as np
@@ -149,7 +149,7 @@ def get_xyz_coordinates(depth: Tensor, mask: Tensor, pose: Tensor, intrinsics: T
     return get_xyz_coordinates_from_xy(depth, xy, pose, intrinsics)
 
 
-def get_nearest_xyz(all_xyz: Tensor, xyz: Tensor) -> Tuple[Tensor, Tensor]:
+def get_nearest_xyz(all_xyz: Tensor, xyz: Tensor) -> tuple[Tensor, Tensor]:
     """Gets nearest neighbor coordinates.
 
     Args:

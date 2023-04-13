@@ -1,7 +1,7 @@
 import functools
 import heapq
 import math
-from typing import Dict, List, Literal, Optional, Set, Tuple
+from typing import Literal
 
 import numpy as np
 
@@ -10,7 +10,7 @@ from usa.planners.base import Map, Planner
 Heuristic = Literal["manhattan", "euclidean", "octile", "chebyshev"]
 
 
-def neighbors(pt: Tuple[int, int]) -> List[Tuple[int, int]]:
+def neighbors(pt: tuple[int, int]) -> list[tuple[int, int]]:
     return [(pt[0] + dx, pt[1] + dy) for dx in range(-1, 2) for dy in range(-1, 2) if (dx, dy) != (0, 0)]
 
 
@@ -19,7 +19,7 @@ class AStarPlanner(Planner):
         self,
         heuristic: Heuristic,
         is_occ: np.ndarray,
-        origin: Tuple[float, float],
+        origin: tuple[float, float],
         resolution: float,
     ) -> None:
         super().__init__()
@@ -38,13 +38,13 @@ class AStarPlanner(Planner):
     def xy_is_occupied(self, x: float, y: float) -> bool:
         return self.point_is_occupied(*self.to_pt((x, y)))
 
-    def to_pt(self, xy: Tuple[float, float]) -> Tuple[int, int]:
+    def to_pt(self, xy: tuple[float, float]) -> tuple[int, int]:
         return self.get_map().to_pt(xy)
 
-    def to_xy(self, pt: Tuple[int, int]) -> Tuple[float, float]:
+    def to_xy(self, pt: tuple[int, int]) -> tuple[float, float]:
         return self.get_map().to_xy(pt)
 
-    def compute_heuristic(self, a: Tuple[int, int], b: Tuple[int, int]) -> float:
+    def compute_heuristic(self, a: tuple[int, int], b: tuple[int, int]) -> float:
         if self.heuristic == "manhattan":
             return abs(a[0] - b[0]) + abs(a[1] - b[1])
         if self.heuristic == "euclidean":
@@ -57,7 +57,7 @@ class AStarPlanner(Planner):
             return max(abs(a[0] - b[0]), abs(a[1] - b[1]))
         raise ValueError(f"Unknown heuristic: {self.heuristic}")
 
-    def is_in_line_of_sight(self, start_pt: Tuple[int, int], end_pt: Tuple[int, int]) -> bool:
+    def is_in_line_of_sight(self, start_pt: tuple[int, int], end_pt: tuple[int, int]) -> bool:
         """Checks if there is a line-of-sight between two points.
 
         Implements using Bresenham's line algorithm.
@@ -97,7 +97,7 @@ class AStarPlanner(Planner):
 
         return True
 
-    def clean_path(self, path: List[Tuple[int, int]]) -> List[Tuple[int, int]]:
+    def clean_path(self, path: list[tuple[int, int]]) -> list[tuple[int, int]]:
         """Cleans up the final path.
 
         This implements a simple algorithm where, given some current position,
@@ -125,9 +125,7 @@ class AStarPlanner(Planner):
             i = j
         return cleaned_path
 
-    def get_unoccupied_neighbor(
-        self, pt: Tuple[int, int], goal_pt: Optional[Tuple[int, int]] = None
-    ) -> Tuple[int, int]:
+    def get_unoccupied_neighbor(self, pt: tuple[int, int], goal_pt: tuple[int, int] | None = None) -> tuple[int, int]:
         if not self.point_is_occupied(*pt):
             return pt
 
@@ -144,7 +142,7 @@ class AStarPlanner(Planner):
 
         raise ValueError("No reachable points")
 
-    def get_reachable_points(self, start_pt: Tuple[int, int]) -> Set[Tuple[int, int]]:
+    def get_reachable_points(self, start_pt: tuple[int, int]) -> set[tuple[int, int]]:
         """Gets all reachable points from a given starting point.
 
         Args:
@@ -156,7 +154,7 @@ class AStarPlanner(Planner):
 
         start_pt = self.get_unoccupied_neighbor(start_pt)
 
-        reachable_points: Set[Tuple[int, int]] = set()
+        reachable_points: set[tuple[int, int]] = set()
         to_visit = [start_pt]
         while to_visit:
             pt = to_visit.pop()
@@ -173,11 +171,11 @@ class AStarPlanner(Planner):
 
     def plan(
         self,
-        start_xy: Tuple[float, float],
-        end_xy: Optional[Tuple[float, float]] = None,
-        end_goal: Optional[str] = None,
+        start_xy: tuple[float, float],
+        end_xy: tuple[float, float] | None = None,
+        end_goal: str | None = None,
         remove_line_of_sight_points: bool = True,
-    ) -> List[Tuple[float, float]]:
+    ) -> list[tuple[float, float]]:
         assert end_goal is None and end_xy is not None, "AStarPlanner doesn't implement location queries"
 
         start_pt, end_pt = self.to_pt(start_xy), self.to_pt(end_xy)
@@ -188,8 +186,8 @@ class AStarPlanner(Planner):
 
         # Implements A* search.
         q = [(0, start_pt)]
-        came_from: Dict[Tuple[int, int], Optional[Tuple[int, int]]] = {start_pt: None}
-        cost_so_far: Dict[Tuple[int, int], float] = {start_pt: 0.0}
+        came_from: dict[tuple[int, int], tuple[int, int] | None] = {start_pt: None}
+        cost_so_far: dict[tuple[int, int], float] = {start_pt: 0.0}
         while q:
             _, current = heapq.heappop(q)
 
@@ -227,7 +225,7 @@ class AStarPlanner(Planner):
 
         return [start_xy] + [self.to_xy(pt) for pt in path[1:-1]] + [end_xy]
 
-    def is_valid_starting_point(self, xy: Tuple[float, float]) -> bool:
+    def is_valid_starting_point(self, xy: tuple[float, float]) -> bool:
         return not self.point_is_occupied(*self.to_pt(xy))
 
     @functools.lru_cache
@@ -238,5 +236,5 @@ class AStarPlanner(Planner):
             origin=self.origin,
         )
 
-    def score_locations(self, end_goal: str, xyzs: List[Tuple[float, float, float]]) -> List[float]:
+    def score_locations(self, end_goal: str, xyzs: list[tuple[float, float, float]]) -> list[float]:
         raise NotImplementedError("AStarPlanner doesn't implement location queries")

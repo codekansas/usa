@@ -1,7 +1,7 @@
 import functools
 import logging
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Type, cast
+from typing import Type, cast
 
 import numpy as np
 import torch
@@ -30,7 +30,7 @@ class ClipSdfPlanner(Planner):
         occ_avoid_radius: float = 0.3,
         floor_height: float = 0.1,
         ceil_height: float = 1.3,
-        cache_dir: Optional[Path] = None,
+        cache_dir: Path | None = None,
     ) -> None:
         """Initializes the ClipSdfPlanner.
 
@@ -70,7 +70,7 @@ class ClipSdfPlanner(Planner):
         # Don't train the model.
         self.model.eval().requires_grad_(False)
 
-    def get_clip_and_sdf(self, xyz: List[Tuple[float, float, float]]) -> Tuple[Tensor, List[float]]:
+    def get_clip_and_sdf(self, xyz: list[tuple[float, float, float]]) -> tuple[Tensor, list[float]]:
         xyz_tensor = torch.tensor(xyz)
         xyz_tensor = self.device.tensor_to(xyz_tensor)
         preds = self.model(xyz_tensor)
@@ -78,10 +78,10 @@ class ClipSdfPlanner(Planner):
         clip_preds, sdf_preds = torch.split(preds, [clip_emb_size, 1], dim=-1)
         return clip_preds.cpu(), [s.item() for s in sdf_preds.cpu()]
 
-    def get_grid_xyzs(self) -> Tuple[Tensor, Tensor, Tensor]:
+    def get_grid_xyzs(self) -> tuple[Tensor, Tensor, Tensor]:
         y_pixels, x_pixels = self.occ_map.grid.shape
 
-        def occ_map_pt_to_xy(pt: Tuple[int, int]) -> Tuple[float, float]:
+        def occ_map_pt_to_xy(pt: tuple[int, int]) -> tuple[float, float]:
             return (
                 pt[0] * self.occ_map.resolution + self.occ_map.origin[0],
                 pt[1] * self.occ_map.resolution + self.occ_map.origin[1],
@@ -146,12 +146,12 @@ class ClipSdfPlanner(Planner):
             resolution=self.occ_map.resolution,
         )
 
-    def score_locations(self, end_goal: str, xyzs: List[Tuple[float, float, float]]) -> List[float]:
+    def score_locations(self, end_goal: str, xyzs: list[tuple[float, float, float]]) -> list[float]:
         with torch.no_grad():
             tokens = self.device.tensor_to(self.task.clip.tokenizer.tokenize(end_goal))
             goal_embs = self.task.clip.linguistic(tokens)
             xyzs_tensor = torch.tensor(xyzs)
-            scores: List[float] = []
+            scores: list[float] = []
             for xyz_chunk in xyzs_tensor.split(256):
                 xyz_chunk = self.device.tensor_to(xyz_chunk)
                 clip_preds = self.model(xyz_chunk)[:, :-1]
@@ -169,7 +169,7 @@ class AStarPlanner(ClipSdfPlanner):
         device: Type[BaseDevice],
         heuristic: Heuristic,
         resolution: float,
-        cache_dir: Optional[Path] = None,
+        cache_dir: Path | None = None,
         floor_height: float = 0.1,
         ceil_height: float = 1.3,
     ) -> None:
@@ -197,11 +197,11 @@ class AStarPlanner(ClipSdfPlanner):
 
     def plan(
         self,
-        start_xy: Tuple[float, float],
-        end_xy: Optional[Tuple[float, float]] = None,
-        end_goal: Optional[str] = None,
+        start_xy: tuple[float, float],
+        end_xy: tuple[float, float] | None = None,
+        end_goal: str | None = None,
         remove_line_of_sight_points: bool = True,
-    ) -> List[Tuple[float, float]]:
+    ) -> list[tuple[float, float]]:
         if end_goal is not None:
             assert end_xy is None, "Cannot specify both end_xy and end_goal"
             end_xy = self.get_end_xy(start_xy, end_goal)
@@ -233,7 +233,7 @@ class AStarPlanner(ClipSdfPlanner):
 
         return torch.cat(all_clip_sims, dim=0).view(xs.shape).max(dim=-1, keepdim=True).values.numpy()
 
-    def get_end_xy(self, start_xy: Tuple[float, float], end_goal: str) -> Tuple[float, float]:
+    def get_end_xy(self, start_xy: tuple[float, float], end_goal: str) -> tuple[float, float]:
         score_map = self.get_score_map(end_goal)
         start_pt = self.a_star_planner.to_pt(start_xy)
         reachable_pts = self.a_star_planner.get_reachable_points(start_pt)
@@ -251,7 +251,7 @@ class AStarPlanner(ClipSdfPlanner):
         # Converts to (X, Y) coordinates.
         return self.a_star_planner.to_xy((x, y))
 
-    def is_valid_starting_point(self, xy: Tuple[float, float]) -> bool:
+    def is_valid_starting_point(self, xy: tuple[float, float]) -> bool:
         return self.a_star_planner.is_valid_starting_point(xy)
 
     @functools.lru_cache
@@ -273,7 +273,7 @@ class GradientPlanner(ClipSdfPlanner):
         sim_loss_weight: float = 15.0,
         num_optimization_steps: int = 1000,
         min_distance: float = 1e-5,
-        cache_dir: Optional[Path] = None,
+        cache_dir: Path | None = None,
         floor_height: float = 0.1,
         ceil_height: float = 1.3,
     ) -> None:
@@ -321,10 +321,10 @@ class GradientPlanner(ClipSdfPlanner):
 
     def plan(
         self,
-        start_xy: Tuple[float, float],
-        end_xy: Optional[Tuple[float, float]] = None,
-        end_goal: Optional[str] = None,
-    ) -> List[Tuple[float, float]]:
+        start_xy: tuple[float, float],
+        end_xy: tuple[float, float] | None = None,
+        end_goal: str | None = None,
+    ) -> list[tuple[float, float]]:
         assert end_xy is not None or end_goal is not None, "Must specify either end_xy or end_goal"
         assert end_xy is None or end_goal is None, "Must specify either end_xy or end_goal, not both"
 
@@ -336,7 +336,7 @@ class GradientPlanner(ClipSdfPlanner):
         xys = self.device.tensor_to(torch.tensor(seed_path))
         xys.requires_grad_(True)
 
-        def get_losses(xys: Tensor) -> Dict[str, Tensor]:
+        def get_losses(xys: Tensor) -> dict[str, Tensor]:
             # Loss for avoiding obstacles.
             waypoint_xyz_min = torch.cat([xys[1:], torch.full_like(xys[1:, :1], self.min_z)], dim=-1)
             waypoint_xyz_max = torch.cat([xys[1:], torch.full_like(xys[1:, :1], self.max_z)], dim=-1)
@@ -358,7 +358,7 @@ class GradientPlanner(ClipSdfPlanner):
             # point should be roughly equal.
             spacing_loss = ((norms[1:] - norms[:-1]) ** 2).sum()
 
-            losses: Dict[str, Tensor] = {
+            losses: dict[str, Tensor] = {
                 "dist": dist_loss * self.dist_loss_weight,
                 "spacing": spacing_loss * self.spacing_loss_weight,
                 "occ": occ_loss * self.occ_loss_weight,
@@ -377,7 +377,7 @@ class GradientPlanner(ClipSdfPlanner):
             return losses
 
         # Optimization loop, just using gradient descent.
-        prev_xys: Optional[Tensor] = None
+        prev_xys: Tensor | None = None
 
         opt = torch.optim.Adam([xys], lr=self.lr)
         # opt = torch.optim.SGD([xys], lr=self.lr, momentum=0.9)
@@ -418,7 +418,7 @@ class GradientPlanner(ClipSdfPlanner):
 
         return points
 
-    def is_valid_starting_point(self, xy: Tuple[float, float]) -> bool:
+    def is_valid_starting_point(self, xy: tuple[float, float]) -> bool:
         min_xyz, max_xyz = (xy[0], xy[1], self.min_z), (xy[0], xy[1], self.max_z)
         _, sdfs = self.get_clip_and_sdf([min_xyz, max_xyz])
         return all(sdf > self.occ_avoid_radius for sdf in sdfs)

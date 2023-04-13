@@ -5,7 +5,6 @@ import logging
 import math
 import os
 from pathlib import Path
-from typing import List, Tuple
 
 import matplotlib.pyplot as plt
 import ml.api as ml
@@ -18,10 +17,10 @@ from usa.planners.base import Map
 
 logger = logging.getLogger(__name__)
 
-PathStartEndCoords = List[Tuple[Tuple[float, float], Tuple[float, float]]]
+PathStartEndCoords = list[tuple[tuple[float, float], tuple[float, float]]]
 
 
-def not_in_line_of_sight(planner_map: Map, xy: np.ndarray, start_xy: Tuple[float, float]) -> np.ndarray:
+def not_in_line_of_sight(planner_map: Map, xy: np.ndarray, start_xy: tuple[float, float]) -> np.ndarray:
     """Gets a mask of the points which aren't in line-of-sight from the start.
 
     Args:
@@ -33,7 +32,7 @@ def not_in_line_of_sight(planner_map: Map, xy: np.ndarray, start_xy: Tuple[float
         A mask of the points which aren't in line-of-sight from the start.
     """
 
-    def is_line_of_sight(start_xy: Tuple[float, float], end_xy: Tuple[float, float]) -> bool:
+    def is_line_of_sight(start_xy: tuple[float, float], end_xy: tuple[float, float]) -> bool:
         start_pt = planner_map.to_pt(start_xy)
         end_pt = planner_map.to_pt(end_xy)
 
@@ -78,7 +77,7 @@ def get_eval_set(
     num_paths: int = 100,
     min_path_euclid_mul: float = 0.1,
     filter_line_of_sight_points: bool = True,
-) -> Tuple[EvalSet, PathStartEndCoords]:
+) -> tuple[EvalSet, PathStartEndCoords]:
     """Gets the evaluation set for a clip recorded with the Stretch robot.
 
     Args:
@@ -199,7 +198,7 @@ def evaluate(eval_set: EvalSet, path_coords: PathStartEndCoords, eval_set_dir: P
             lengths_writer.writerow(["start_x", "start_y", "end_x", "end_y", "path_length"])
 
             planner_map = planner.get_map()
-            paths: List[List[Tuple[float, float]]] = []
+            paths: list[list[tuple[float, float]]] = []
 
             for i, (start, end) in enumerate(path_coords):
                 try:

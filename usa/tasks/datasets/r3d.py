@@ -3,7 +3,6 @@ import logging
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Tuple
 from zipfile import ZipFile
 
 import cv2
@@ -29,8 +28,8 @@ STUDIO_DATASET_URL = "https://github.com/codekansas/usa/releases/download/v1.0.0
 
 @dataclass(frozen=True)
 class Metadata:
-    rgb_shape: Tuple[int, int]
-    depth_shape: Tuple[int, int]
+    rgb_shape: tuple[int, int]
+    depth_shape: tuple[int, int]
     fps: int
     timestamps: np.ndarray  # (T) the camera frame timestamps
     intrinsics: np.ndarray  # (3, 3) intrinsics matrix
@@ -38,7 +37,7 @@ class Metadata:
     start_pose: np.ndarray  # (4, 4) initial camera pose matrix
 
 
-def as_pose_matrix(pose: List[float]) -> np.ndarray:
+def as_pose_matrix(pose: list[float]) -> np.ndarray:
     """Converts a list of pose parameters to a pose matrix.
 
     Args:
@@ -59,7 +58,7 @@ def get_arrs(
     r3d_file: ZipFile,
     meta: Metadata,
     use_depth_shape: bool = True,
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Loads the arrays from the .r3d file.
 
     Args:
@@ -86,7 +85,7 @@ def get_arrs(
     rgb_h, rgb_w = meta.rgb_shape
     depth_h, depth_w = meta.depth_shape
 
-    def get_filenames(expr: re.Pattern) -> List[str]:
+    def get_filenames(expr: re.Pattern) -> list[str]:
         re_matches = sorted(
             [re_match for re_match in (expr.match(f.filename) for f in r3d_file.filelist) if re_match is not None],
             key=lambda m: int(m.group(1)),
