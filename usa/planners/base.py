@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Optional, Tuple
 
 import numpy as np
 import torch
@@ -16,31 +15,31 @@ from usa.tasks.datasets.types import PosedRGBDItem
 class Map:
     grid: np.ndarray
     resolution: float
-    origin: Tuple[float, float]
+    origin: tuple[float, float]
 
-    def to_pt(self, xy: Tuple[float, float]) -> Tuple[int, int]:
+    def to_pt(self, xy: tuple[float, float]) -> tuple[int, int]:
         return (
             int((xy[0] - self.origin[0]) / self.resolution + 0.5),
             int((xy[1] - self.origin[1]) / self.resolution + 0.5),
         )
 
-    def to_xy(self, pt: Tuple[int, int]) -> Tuple[float, float]:
+    def to_xy(self, pt: tuple[int, int]) -> tuple[float, float]:
         return (
             pt[0] * self.resolution + self.origin[0],
             pt[1] * self.resolution + self.origin[1],
         )
 
-    def is_occupied(self, pt: Tuple[int, int]) -> bool:
+    def is_occupied(self, pt: tuple[int, int]) -> bool:
         return bool(self.grid[pt[1], pt[0]])
 
 
 def get_occupancy_map_from_dataset(
     ds: Dataset[PosedRGBDItem],
     cell_size: float,
-    occ_height_range: Tuple[float, float],
+    occ_height_range: tuple[float, float],
     occ_threshold: int = 100,
     clear_around_bot_radius: float = 0.0,
-    cache_dir: Optional[Path] = None,
+    cache_dir: Path | None = None,
     ignore_cached: bool = True,
 ) -> Map:
     """Gets the occupancy map from the given dataset.
@@ -78,8 +77,8 @@ def get_occupancy_map_from_dataset(
 
     else:
         xbins, ybins = int(bounds.xdiff / resolution) + 1, int(bounds.ydiff / resolution) + 1
-        counts: Optional[Tensor] = None
-        any_counts: Optional[Tensor] = None
+        counts: Tensor | None = None
+        any_counts: Tensor | None = None
 
         # Counts the number of points in each cell.
         with torch.no_grad():
@@ -90,8 +89,9 @@ def get_occupancy_map_from_dataset(
                 xs = ((xy[:, 0] - origin[0]) / resolution).floor().long()
                 ys = ((xy[:, 1] - origin[1]) / resolution).floor().long()
 
-                if counts is None or any_counts is None:
+                if counts is None:
                     counts = xy.new_zeros((ybins, xbins), dtype=torch.long).flatten()
+                if any_counts is None:
                     any_counts = xy.new_zeros((ybins, xbins), dtype=torch.bool).flatten()
 
                 # Counts the number of occupying points in each cell.
@@ -134,7 +134,7 @@ def get_occupancy_map_from_dataset(
 
 class Planner(nn.Module, ABC):
     @abstractmethod
-    def is_valid_starting_point(self, xy: Tuple[float, float]) -> bool:
+    def is_valid_starting_point(self, xy: tuple[float, float]) -> bool:
         """Checks if the starting point is valid.
 
         Args:
@@ -155,10 +155,10 @@ class Planner(nn.Module, ABC):
     @abstractmethod
     def plan(
         self,
-        start_xy: Tuple[float, float],
-        end_xy: Optional[Tuple[float, float]] = None,
-        end_goal: Optional[str] = None,
-    ) -> List[Tuple[float, float]]:
+        start_xy: tuple[float, float],
+        end_xy: tuple[float, float] | None = None,
+        end_goal: str | None = None,
+    ) -> list[tuple[float, float]]:
         """Plan a path from start_xy to an ending location.
 
         Note that either `end_xy` or `end_goal` must be specified, but not both.
@@ -173,7 +173,7 @@ class Planner(nn.Module, ABC):
         """
 
     @abstractmethod
-    def score_locations(self, end_goal: str, xyzs: List[Tuple[float, float, float]]) -> List[float]:
+    def score_locations(self, end_goal: str, xyzs: list[tuple[float, float, float]]) -> list[float]:
         """Scores the locations by their semantic similarity to the goal.
 
         Args:

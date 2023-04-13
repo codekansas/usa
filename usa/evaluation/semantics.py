@@ -4,7 +4,7 @@ import csv
 import logging
 import os
 from pathlib import Path
-from typing import Iterator, List, Tuple
+from typing import Iterator
 
 import numpy as np
 import open3d as o3d
@@ -22,15 +22,15 @@ from usa.tasks.datasets.utils import (
 
 logger = logging.getLogger(__name__)
 
-PathStartCoordsAndGoal = List[Tuple[Tuple[float, float], str]]
+PathStartCoordsAndGoal = list[tuple[tuple[float, float], str]]
 
 
 def get_eval_set(
     name: str,
-    queries: List[str],
+    queries: list[str],
     rotate: bool = False,
     concat_horizontal: bool = False,
-) -> Tuple[EvalSet, PathStartCoordsAndGoal]:
+) -> tuple[EvalSet, PathStartCoordsAndGoal]:
     """Gets the evaluation set for a clip recorded with the Stretch robot.
 
     Args:
@@ -141,7 +141,7 @@ def evaluate(eval_set: EvalSet, path_coords: PathStartCoordsAndGoal, eval_set_di
         # Converts a generic goal string into a string to use as a file name.
         return goal.replace(" ", "_").replace("/", "_").lower()
 
-    def interpolate_path(path: List[Tuple[float, float]], resolution: float) -> Iterator[Tuple[float, float]]:
+    def interpolate_path(path: list[tuple[float, float]], resolution: float) -> Iterator[tuple[float, float]]:
         for i in range(len(path) - 1):
             start = path[i]
             end = path[i + 1]
@@ -167,7 +167,7 @@ def evaluate(eval_set: EvalSet, path_coords: PathStartCoordsAndGoal, eval_set_di
                 lengths_writer.writerow(["start_x", "start_y", "goal", "path_length"])
 
                 planner_map = planner.get_map()
-                paths: List[List[Tuple[float, float]]] = []
+                paths: list[list[tuple[float, float]]] = []
 
                 for start, goal in path_coords:
                     try:

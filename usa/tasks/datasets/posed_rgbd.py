@@ -2,7 +2,7 @@ import logging
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterator, List, Optional, Tuple
+from typing import Iterator
 
 import ml.api as ml
 import more_itertools
@@ -151,7 +151,7 @@ def get_xyz(depth: Tensor, mask: Tensor, pose: Tensor, intrinsics: Tensor) -> Te
     return xyz
 
 
-def iter_xyz(ds: Dataset[PosedRGBDItem], desc: str, chunk_size: int = 16) -> Iterator[Tuple[Tensor, Tensor]]:
+def iter_xyz(ds: Dataset[PosedRGBDItem], desc: str, chunk_size: int = 16) -> Iterator[tuple[Tensor, Tensor]]:
     """Iterates XYZ points from the dataset.
 
     Args:
@@ -179,14 +179,14 @@ def iter_xyz(ds: Dataset[PosedRGBDItem], desc: str, chunk_size: int = 16) -> Ite
         yield xyz, mask.squeeze(1)
 
 
-def get_poses(ds: Dataset[PosedRGBDItem], cache_dir: Optional[Path] = None) -> np.ndarray:
+def get_poses(ds: Dataset[PosedRGBDItem], cache_dir: Path | None = None) -> np.ndarray:
     # pylint: disable=unsupported-assignment-operation,unsubscriptable-object
     cache_loc = None if cache_dir is None else cache_dir / "poses.npy"
 
     if cache_loc is not None and cache_loc.is_file():
         return np.load(cache_loc)
 
-    all_poses: List[np.ndarray] = []
+    all_poses: list[np.ndarray] = []
     for item in tqdm.tqdm(ds, desc="Poses"):
         all_poses.append(item.pose.cpu().numpy())
 
@@ -198,11 +198,11 @@ def get_poses(ds: Dataset[PosedRGBDItem], cache_dir: Optional[Path] = None) -> n
     return poses
 
 
-def get_pose_bounds(ds: Dataset[PosedRGBDItem], cache_dir: Optional[Path] = None) -> Bounds:
+def get_pose_bounds(ds: Dataset[PosedRGBDItem], cache_dir: Path | None = None) -> Bounds:
     # pylint: disable=unsupported-assignment-operation,unsubscriptable-object
     cache_loc = None if cache_dir is None else cache_dir / "pose_bounds.npy"
 
-    bounds: Optional[np.ndarray] = None
+    bounds: np.ndarray | None = None
 
     if cache_loc is not None and cache_loc.is_file():
         bounds = np.load(cache_loc)
@@ -223,11 +223,11 @@ def get_pose_bounds(ds: Dataset[PosedRGBDItem], cache_dir: Optional[Path] = None
     return Bounds.from_arr(bounds)
 
 
-def get_bounds(ds: Dataset[PosedRGBDItem], cache_dir: Optional[Path] = None) -> Bounds:
+def get_bounds(ds: Dataset[PosedRGBDItem], cache_dir: Path | None = None) -> Bounds:
     # pylint: disable=unsupported-assignment-operation,unsubscriptable-object
     cache_loc = None if cache_dir is None else cache_dir / "bounds.npy"
 
-    bounds: Optional[np.ndarray] = None
+    bounds: np.ndarray | None = None
 
     if cache_loc is not None and cache_loc.is_file():
         bounds = np.load(cache_loc)

@@ -1,4 +1,4 @@
-from typing import NamedTuple, Optional
+from typing import NamedTuple
 
 import torch
 from torch import Tensor
@@ -11,9 +11,9 @@ class NeRFItem(NamedTuple):
 
     # These are only used during the testing phase, as ground truth for
     # evaluating NeRF reconstruction quality.
-    depth: Optional[Tensor]
-    ray_dir_high: Optional[Tensor]
-    view_dir_high: Optional[Tensor]
+    depth: Tensor | None
+    ray_dir_high: Tensor | None
+    view_dir_high: Tensor | None
 
 
 class PosedRGBDItem(NamedTuple):

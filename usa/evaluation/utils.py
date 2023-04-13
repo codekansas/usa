@@ -1,7 +1,7 @@
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Tuple, Type, cast
+from typing import Type, cast
 
 import matplotlib.pyplot as plt
 import ml.api as ml
@@ -29,7 +29,7 @@ from usa.tasks.datasets.types import PosedRGBDItem
 class EvalSet:
     name: str
     dataset: Dataset[PosedRGBDItem]
-    planners: Dict[str, Planner]
+    planners: dict[str, Planner]
     rotate: bool = False
     concat_horizontal: bool = False
 
@@ -44,7 +44,7 @@ def load_clip_sdf_model_from_ckpt_and_config(
     ckpt_path: Path,
     config_path: Path,
     device: Type[BaseDevice],
-) -> Tuple[Point2EmbModel, ClipSdfTask]:
+) -> tuple[Point2EmbModel, ClipSdfTask]:
     """Loads the CLIP SDF model from the experiment path.
 
     Args:
@@ -72,7 +72,7 @@ def load_clip_sdf_model_from_ckpt_and_config(
     return model, task
 
 
-def load_clip_sdf_model(exp_path: Path, device: Type[BaseDevice]) -> Tuple[Point2EmbModel, ClipSdfTask]:
+def load_clip_sdf_model(exp_path: Path, device: Type[BaseDevice]) -> tuple[Point2EmbModel, ClipSdfTask]:
     """Loads the CLIP SDF model from the experiment path.
 
     Args:
@@ -107,7 +107,7 @@ def get_planners(
     use_occ_grid_planners: bool,
     floor_height: float = 0.1,
     ceil_height: float = 1.3,
-) -> Tuple[Dict[str, Planner], Dataset[PosedRGBDItem], np.ndarray]:
+) -> tuple[dict[str, Planner], Dataset[PosedRGBDItem], np.ndarray]:
     """Returns the planners for a given evaluation set.
 
     Args:
@@ -149,7 +149,7 @@ def get_planners(
     # Cache to the experiment directory.
     base_cache_dir = clip_sdf_exp_path / "eval_cache" / "semantics" / name
 
-    planners: Dict[str, Planner] = {
+    planners: dict[str, Planner] = {
         "a_star_10_cm_clip_sdf": AStarClipSDFPlanner(
             dataset,
             model,
@@ -250,7 +250,7 @@ def get_planners(
 
 def plot_paths(
     planner_map: Map,
-    paths: List[List[Tuple[float, float]]],
+    paths: list[list[tuple[float, float]]],
     output_path: Path,
 ) -> None:
     """Plots a planner path and saves it to the output directory.

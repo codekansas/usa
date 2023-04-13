@@ -2,7 +2,7 @@ import functools
 import itertools
 import logging
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable
 
 import ml.api as ml
 import torch
@@ -38,10 +38,10 @@ def clip_sim(a: Tensor, b: Tensor) -> Tensor:
 def get_image_crop_around(
     xy: Tensor,
     image: Tensor,
-    trg_shape: Tuple[int, int],
+    trg_shape: tuple[int, int],
     min_crop: float = 0.2,
     max_crop: float = 0.4,
-) -> Optional[Tuple[Tensor, Tensor]]:
+) -> tuple[Tensor, Tensor] | None:
     trg_w, trg_h = trg_shape
     npts, _, img_h, img_w = image.shape
 
@@ -79,12 +79,12 @@ def get_image_crop_around(
 class ClipSdfTaskConfig(ml.BaseTaskConfig):
     dataset: str = ml.conf_field(MISSING, help="Dataset key to use")
     clip_model: str = ml.conf_field(MISSING, help="The CLIP model to load")
-    queries: List[str] = ml.conf_field(MISSING, help="Queries to evaluate against")
+    queries: list[str] = ml.conf_field(MISSING, help="Queries to evaluate against")
     rotate_image: bool = ml.conf_field(False, help="If set, rotate image when getting CLIP scores")
     pts_per_frame: int = ml.conf_field(100, help="Number of points to sample per frame")
     min_depth_prct: float = ml.conf_field(0.1, help="Minimum depth percentage to sample")
     points_to_sample: int = ml.conf_field(50, help="XYZ points to sample (per frame) during model inference")
-    image_shape: Tuple[int, int] = ml.conf_field(lambda: (224, 224), help="Size of the SDF image to log")
+    image_shape: tuple[int, int] = ml.conf_field(lambda: (224, 224), help="Size of the SDF image to log")
 
 
 class ClipModel:
@@ -159,7 +159,7 @@ class ClipSdfTask(ml.BaseTask):
         model: ml.BaseModel,
         batch: PosedRGBDItem,
         state: ml.State,
-    ) -> Tuple[Tensor, Tensor]:
+    ) -> tuple[Tensor, Tensor]:
         _, depth, mask, intrinsics, pose = batch
         depth_frac = torch.rand_like(depth) * (1 - self.config.min_depth_prct) + self.config.min_depth_prct
 
@@ -178,8 +178,8 @@ class ClipSdfTask(ml.BaseTask):
         model: ml.BaseModel,
         batch: PosedRGBDItem,
         state: ml.State,
-        output: Tuple[Tensor, Tensor],
-    ) -> Dict[str, Tensor]:
+        output: tuple[Tensor, Tensor],
+    ) -> dict[str, Tensor]:
         rgb, depth, mask, intrinsics, pose = batch
         preds, xyz = output
         device, dtype = preds.device, preds.dtype
@@ -202,8 +202,8 @@ class ClipSdfTask(ml.BaseTask):
             crop_result = get_image_crop_around(nearest_xy, rgb[batch_inds], (224, 224))
 
             # If there was a cropped image, get the CLIP embeddings for it.
-            crop_image: Optional[Tensor] = None
-            clip: Optional[Tensor] = None
+            crop_image: Tensor | None = None
+            clip: Tensor | None = None
             if crop_result is not None:
                 crop_image = crop_result[0]
                 if self.config.rotate_image:
@@ -251,10 +251,10 @@ class ClipSdfTask(ml.BaseTask):
 
         return losses
 
-    def get_single_loss(self, loss: Tensor | Dict[str, Tensor]) -> Tuple[Tensor, List[str]]:
+    def get_single_loss(self, loss: Tensor | dict[str, Tensor]) -> tuple[Tensor, list[str]]:
         assert isinstance(loss, dict)
-        losses: List[Tensor] = [loss["sdf"].mean()]
-        keys: List[str] = ["sdf"]
+        losses: list[Tensor] = [loss["sdf"].mean()]
+        keys: list[str] = ["sdf"]
         if "clip" in loss:
             losses += [loss["clip"].mean()]
             keys += ["clip"]
@@ -266,7 +266,7 @@ class ClipSdfTask(ml.BaseTask):
         device: torch.device,
         dtype: torch.dtype,
         image_chunk_size: int = 128,
-    ) -> Tuple[Tensor, Tensor]:
+    ) -> tuple[Tensor, Tensor]:
         with torch.no_grad():
             bounds = Bounds.from_arr(self.bounds)
             pose_bounds = Bounds.from_arr(self.pose_bounds)
@@ -285,8 +285,8 @@ class ClipSdfTask(ml.BaseTask):
             text_embs = self.text_clip_embs(device)
 
             # Runs all XYZ points through the model to get predictions.
-            all_clip_preds: List[Tensor] = []
-            all_sdf_preds: List[Tensor] = []
+            all_clip_preds: list[Tensor] = []
+            all_sdf_preds: list[Tensor] = []
             for xyz_chunk in tqdm.tqdm(torch.chunk(xyz, num_chunks), disable=ml.is_distributed()):
                 preds = model(xyz_chunk)
                 clip_preds, sdf_preds = torch.split(preds, [self.clip.visual.output_dim, 1], dim=-1)

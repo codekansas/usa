@@ -12,19 +12,7 @@ import os
 import re
 from collections import OrderedDict
 from pathlib import Path
-from typing import (
-    Any,
-    Dict,
-    List,
-    Literal,
-    Optional,
-    Set,
-    Tuple,
-    Union,
-    cast,
-    get_args,
-    overload,
-)
+from typing import Any, Literal, cast, get_args, overload
 
 import ftfy
 import ml.api as ml
@@ -58,7 +46,7 @@ def cast_pretrained_model_key(s: str) -> PretrainedModel:
     return cast(PretrainedModel, s)
 
 
-PRETRAINED_MODELS: Dict[PretrainedModel, str] = {
+PRETRAINED_MODELS: dict[PretrainedModel, str] = {
     "RN50": f"{URL_PREFIX}/afeb0e10f9e5a86da6080e35cf09123aca3b358a0c3e3b6c78a7b63bc04b6762/RN50.pt",
     "RN101": f"{URL_PREFIX}/8fa8567bab74a42d41c5915025a8e4538c3bdbe8804a470a72f30b0d94fab599/RN101.pt",
     "RN50x4": f"{URL_PREFIX}/7e526bd135e493cef0776de27d5f42653e6b4c8bf9e0f653bb11773263205fdd/RN50x4.pt",
@@ -96,7 +84,7 @@ def default_bpe() -> str:
 
 
 @functools.lru_cache()
-def bytes_to_unicode() -> Dict[int, str]:
+def bytes_to_unicode() -> dict[int, str]:
     """Returns list of utf-8 byte and a corresponding list of unicode strings.
 
     The reversible bpe codes work on unicode strings. This means you need a
@@ -125,7 +113,7 @@ def bytes_to_unicode() -> Dict[int, str]:
     return dict(zip(bs, css))
 
 
-def get_pairs(word: Tuple[str, ...]) -> Set[Tuple[str, str]]:
+def get_pairs(word: tuple[str, ...]) -> set[tuple[str, str]]:
     pairs = set()
     prev_char = word[0]
     for char in word[1:]:
@@ -185,7 +173,7 @@ class CLIPTokenizer:
             if bigram not in self.bpe_ranks:
                 break
             first, second = bigram
-            new_word_list: List[str] = []
+            new_word_list: list[str] = []
             i = 0
             while i < len(word):
                 try:
@@ -211,22 +199,22 @@ class CLIPTokenizer:
         self.cache[token] = word_str
         return word_str
 
-    def encode(self, text: str) -> List[int]:
-        bpe_tokens: List[int] = []
+    def encode(self, text: str) -> list[int]:
+        bpe_tokens: list[int] = []
         text = whitespace_clean(basic_clean(text)).lower()
         for token in re.findall(self.pat, text):
             token = "".join(self.byte_encoder[b] for b in token.encode("utf-8"))
             bpe_tokens.extend(self.encoder[bpe_token] for bpe_token in self.bpe(token).split(" "))
         return bpe_tokens
 
-    def decode(self, tokens: List[int]) -> str:
+    def decode(self, tokens: list[int]) -> str:
         text = "".join([self.decoder[token] for token in tokens])
         text = bytearray([self.byte_decoder[c] for c in text]).decode("utf-8", errors="replace").replace("</w>", " ")
         return text
 
     def tokenize(
         self,
-        texts: Union[str, List[str]],
+        texts: str | list[str],
         context_length: int = 77,
         truncate: bool = False,
     ) -> Tensor:
@@ -262,8 +250,8 @@ class Bottleneck(nn.Module):
         planes: int,
         stride: int = 1,
         *,
-        device: Optional[torch.device] = None,
-        dtype: Optional[torch.dtype] = None,
+        device: torch.device | None = None,
+        dtype: torch.dtype | None = None,
     ) -> None:
         super().__init__()
 
@@ -314,10 +302,10 @@ class AttentionPool2d(nn.Module):
         spacial_dim: int,
         embed_dim: int,
         num_heads: int,
-        output_dim: Optional[int] = None,
+        output_dim: int | None = None,
         *,
-        device: Optional[torch.device] = None,
-        dtype: Optional[torch.dtype] = None,
+        device: torch.device | None = None,
+        dtype: torch.dtype | None = None,
     ) -> None:
         super().__init__()
 
@@ -365,14 +353,14 @@ class ModifiedResNet(nn.Module):
 
     def __init__(
         self,
-        layers: Tuple[int, int, int, int],
+        layers: tuple[int, int, int, int],
         output_dim: int,
         heads: int,
         input_resolution: int = 224,
         width: int = 64,
         *,
-        device: Optional[torch.device] = None,
-        dtype: Optional[torch.dtype] = None,
+        device: torch.device | None = None,
+        dtype: torch.dtype | None = None,
     ) -> None:
         """ResNet class that is similar to TorchVision's but with some changes.
 
@@ -494,10 +482,10 @@ class ResidualAttentionBlock(nn.Module):
         self,
         d_model: int,
         n_head: int,
-        attn_mask: Optional[Tensor] = None,
+        attn_mask: Tensor | None = None,
         *,
-        device: Optional[torch.device] = None,
-        dtype: Optional[torch.dtype] = None,
+        device: torch.device | None = None,
+        dtype: torch.dtype | None = None,
     ) -> None:
         super().__init__()
 
@@ -531,10 +519,10 @@ class Transformer(nn.Module):
         width: int,
         layers: int,
         heads: int,
-        attn_mask: Optional[Tensor] = None,
+        attn_mask: Tensor | None = None,
         *,
-        device: Optional[torch.device] = None,
-        dtype: Optional[torch.dtype] = None,
+        device: torch.device | None = None,
+        dtype: torch.dtype | None = None,
     ):
         super().__init__()
         self.width = width
@@ -558,8 +546,8 @@ class VisionTransformer(nn.Module):
         heads: int,
         output_dim: int,
         *,
-        device: Optional[torch.device] = None,
-        dtype: Optional[torch.dtype] = None,
+        device: torch.device | None = None,
+        dtype: torch.dtype | None = None,
     ) -> None:
         super().__init__()
 
@@ -630,8 +618,8 @@ class TextModel(nn.Module):
         transformer_heads: int,
         transformer_layers: int,
         *,
-        device: Optional[torch.device] = None,
-        dtype: Optional[torch.dtype] = None,
+        device: torch.device | None = None,
+        dtype: torch.dtype | None = None,
     ) -> None:
         super().__init__()
 
@@ -705,7 +693,7 @@ class CLIP(nn.Module):
         embed_dim: int,
         # vision
         image_resolution: int,
-        vision_layers: Union[Tuple[int, int, int, int], int],
+        vision_layers: tuple[int, int, int, int] | int,
         vision_width: int,
         vision_patch_size: int,
         # text
@@ -715,14 +703,14 @@ class CLIP(nn.Module):
         transformer_heads: int,
         transformer_layers: int,
         *,
-        device: Optional[torch.device] = None,
-        dtype: Optional[torch.dtype] = None,
+        device: torch.device | None = None,
+        dtype: torch.dtype | None = None,
     ) -> None:
         super().__init__()
 
         self.context_length = context_length
 
-        self.visual: Union[ModifiedResNet, VisionTransformer]
+        self.visual: ModifiedResNet | VisionTransformer
         if isinstance(vision_layers, (tuple, list)):
             vision_heads = vision_width * 32 // 64
             self.visual = ModifiedResNet(
@@ -790,7 +778,7 @@ class CLIP(nn.Module):
     def encode_text(self, text: Tensor) -> Tensor:
         return self.linguistic(text)
 
-    def forward(self, image: Tensor, text: Tensor) -> Tuple[Tensor, Tensor]:
+    def forward(self, image: Tensor, text: Tensor) -> tuple[Tensor, Tensor]:
         image_features = self.encode_image(image)
         text_features = self.encode_text(text)
 
@@ -837,44 +825,44 @@ def convert_weights(model: nn.Module) -> None:
 
 @overload
 def load_pretrained(
-    key: Union[PretrainedModel, nn.Module],
+    key: PretrainedModel | nn.Module,
     mode: Literal["visual"],
     *,
-    device: Optional[torch.device] = None,
-    dtype: Optional[torch.dtype] = None,
-) -> Union[ModifiedResNet, VisionTransformer]:
+    device: torch.device | None = None,
+    dtype: torch.dtype | None = None,
+) -> ModifiedResNet | VisionTransformer:
     ...
 
 
 @overload
 def load_pretrained(
-    key: Union[PretrainedModel, nn.Module],
+    key: PretrainedModel | nn.Module,
     mode: Literal["linguistic"],
     *,
-    device: Optional[torch.device] = None,
-    dtype: Optional[torch.dtype] = None,
+    device: torch.device | None = None,
+    dtype: torch.dtype | None = None,
 ) -> TextModel:
     ...
 
 
 @overload
 def load_pretrained(
-    key: Union[PretrainedModel, nn.Module],
+    key: PretrainedModel | nn.Module,
     mode: Literal["all"],
     *,
-    device: Optional[torch.device] = None,
-    dtype: Optional[torch.dtype] = None,
+    device: torch.device | None = None,
+    dtype: torch.dtype | None = None,
 ) -> CLIP:
     ...
 
 
 def load_pretrained(
-    key: Union[PretrainedModel, nn.Module],
+    key: PretrainedModel | nn.Module,
     mode: str,
     *,
-    device: Optional[torch.device] = None,
-    dtype: Optional[torch.dtype] = None,
-) -> Union[CLIP, ModifiedResNet, VisionTransformer, TextModel]:
+    device: torch.device | None = None,
+    dtype: torch.dtype | None = None,
+) -> CLIP | ModifiedResNet | VisionTransformer | TextModel:
     """Builds the CLIP model from a state dictionary.
 
     Args:
@@ -898,7 +886,7 @@ def load_pretrained(
 
     vit = "visual.proj" in ckpt
 
-    vision_layers: Union[Tuple[int, int, int, int], int]
+    vision_layers: tuple[int, int, int, int] | int
     if vit:
         vision_width = ckpt["visual.conv1.weight"].shape[0]
         vision_layers = sum(1 for k in ckpt.keys() if k.startswith("visual.") and k.endswith(".attn.in_proj_weight"))
@@ -907,7 +895,7 @@ def load_pretrained(
         image_resolution = vision_patch_size * grid_size
     else:
         vision_layers = cast(
-            Tuple[int, int, int, int],
+            tuple[int, int, int, int],
             tuple(len(set(k.split(".")[2] for k in ckpt if k.startswith(f"visual.layer{b}"))) for b in [1, 2, 3, 4]),
         )
         vision_width = ckpt["visual.layer1.0.conv1.weight"].shape[0]
@@ -951,7 +939,7 @@ def load_pretrained(
 
     convert_weights(model)
 
-    def get_ckpt_part(ckpt: Dict[str, Any], prefix: str) -> Dict[str, Any]:
+    def get_ckpt_part(ckpt: dict[str, Any], prefix: str) -> dict[str, Any]:
         return {k[len(prefix) :]: v for k, v in ckpt.items() if k.startswith(prefix)}
 
     if mode == "visual":
