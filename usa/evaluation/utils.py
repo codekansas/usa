@@ -35,8 +35,7 @@ class EvalSet:
 
 
 def get_eval_root_dir() -> Path:
-    # TODO: Implement this
-    root_dir = ml.get_eval_run_dir() / "language-navigation"
+    root_dir = ml.get_eval_run_dir() / "usa"
     root_dir.mkdir(parents=True, exist_ok=True)
     return root_dir
 
@@ -136,7 +135,7 @@ def get_planners(
     if "CKPTS_PATH_ROOT" in os.environ:
         clip_sdf_exp_path = Path(os.environ["CKPTS_PATH_ROOT"]) / name
     else:
-        clip_sdf_exp_path = get_eval_root_dir() / "language-navigation-ckpts" / name
+        clip_sdf_exp_path = get_eval_root_dir() / "ckpts" / name
     if not clip_sdf_exp_path.is_dir():
         raise EnvironmentError(f"Checkpoint directory not found: {clip_sdf_exp_path}")
 
