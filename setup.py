@@ -14,9 +14,13 @@ with open("requirements-dev.txt", "r", encoding="utf-8") as f:
     requirements_dev: list[str] = f.read().splitlines()
 
 
+with open("usa/__version__.txt", "r", encoding="utf-8") as f:
+    version: str = f.read().strip()
+
+
 setup(
     name="usa-net",
-    version="0.0.1",
+    version=version,
     description="USA net project",
     author="Benjamin Bolte",
     url="https://github.com/codekansas/usa-net",
