@@ -37,7 +37,6 @@ def aminmax(x: Tensor) -> tuple[Tensor, Tensor]:
     return xmin, xmax
 
 
-
 def clip_sim(a: Tensor, b: Tensor) -> Tensor:
     assert a.dim() == 2 and b.dim() == 2
     a, b = a / (a.norm(dim=1, keepdim=True) + 1e-3), b / (b.norm(dim=1, keepdim=True) + 1e-3)
@@ -189,7 +188,7 @@ class ClipSdfTask(ml.SupervisedLearningTask[ClipSdfTaskConfig, Model, Batch, Out
     def compute_loss(self, model: Model, batch: Batch, state: ml.State, output: Output) -> Loss:
         rgb, depth, mask, intrinsics, pose = batch
         preds, xyz = output
-        device, dtype = preds.device, preds.dtype
+        device = preds.device
 
         # Splits into CLIP and SDF predictions.
         clip_preds, sdf_preds = torch.split(preds, [self.clip.visual.output_dim, 1], dim=-1)
@@ -247,7 +246,7 @@ class ClipSdfTask(ml.SupervisedLearningTask[ClipSdfTaskConfig, Model, Batch, Out
         self.logger.log_scalar("pmax", pmax)
 
         if state.phase == "valid":
-            # clip_image, sdf_image = self.get_clip_and_sdf_images(model, device, dtype)
+            # clip_image, sdf_image = self.get_clip_and_sdf_images(model, device, preds.dtype)
             # self.logger.log_image("sdf", sdf_image)
             self.logger.log_point_cloud("xyz", torch.stack([xyz, nearest_xyz.to(xyz)]))
             self.logger.log_point_cloud("surface", batch_xyz.to(xyz))

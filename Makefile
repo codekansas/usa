@@ -56,7 +56,7 @@ py-files := $$(git ls-files '*.py')
 
 format:
 	black $(py-files)
-	ruff --fix $(py-files)g
+	ruff --fix $(py-files)
 .PHONY: format
 
 static-checks:
