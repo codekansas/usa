@@ -1,0 +1,52 @@
+model:
+  name: point2emb
+  num_layers: 4
+  hidden_dims: 256
+  output_dims: 513  # CLIP dimensions = 512 + SDF = 1
+
+task:
+  name: clip_sdf
+  # dataset: lab_stretch
+  # dataset: kitchen_stretch
+  # dataset: chess_stretch
+  # dataset: replica_apt_3_mnp
+  # dataset: lab_r3d
+  # dataset: studio_r3d
+  clip_model: ViT_B_16
+  queries:
+    - Chair
+    - Shelves
+    - Man sitting at a computer
+    - Desktop computers
+    - Wooden box
+    - Doorway
+  rotate_image: true
+
+  finished:
+    max_steps: 10_000
+  dataloader:
+    train:
+      batch_size: 16
+      num_workers: 0
+      persistent_workers: false
+
+optimizer:
+  name: adam
+
+lr_scheduler:
+  name: linear
+
+trainer:
+  name: slurm
+  num_nodes: 1
+  gpus_per_node: 1
+  checkpoint:
+    save_every_n_steps: 2500
+    only_save_most_recent: true
+  validation:
+    valid_every_n_steps: 250
+    num_init_valid_steps: 1
+
+logger:
+  - name: stdout
+  - name: tensorboard

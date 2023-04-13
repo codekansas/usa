@@ -1,10 +1,9 @@
 # requirements-dev.txt
 
 black
-cmake
 darglint
 mypy
+mypy-extensions
 pytest
 ruff
-clang-format
-cmake-format
+typing-extensions
