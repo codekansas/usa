@@ -9,8 +9,8 @@ from torch import Tensor
 from torch.distributions.normal import Normal
 from torch.nn import functional as F
 
-from project.models.a2c import A2CModel
-from project.tasks.rl_demo_env import BipedalWalkerEnvironment, BWAction, BWState
+from usa_net.models.a2c import A2CModel
+from usa_net.tasks.rl_demo_env import BipedalWalkerEnvironment, BWAction, BWState
 
 
 @dataclass
