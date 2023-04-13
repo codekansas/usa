@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 from typing import List, Literal, Optional, Tuple, Type, cast, get_args
 
+import numpy as np
 import open3d as o3d
 from ml.trainers.mixins.device.auto import AutoDevice
 from ml.trainers.mixins.device.base import BaseDevice
@@ -20,7 +21,6 @@ from usa.planners.clip_sdf import (
 from usa.tasks.clip_sdf import ClipSdfTask
 from usa.tasks.datasets.types import PosedRGBDItem
 from usa.tasks.datasets.utils import make_point_cloud_from_dataset
-import numpy as np
 
 logger = logging.getLogger(__name__)
 
