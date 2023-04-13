@@ -22,10 +22,10 @@ class SinusoidalPositionalEmbeddings(nn.Module):
     def forward(self, pos: Tensor) -> Tensor:
         """Applies sinusoidal embeddings to input positions.
 
-        Input:
+        Args:
             pos: Tensor with shape (..., N)
 
-        Output:
+        Returns:
             Embedded positions, with shape (..., N * (num_embs * 2) + 1)
         """
 
