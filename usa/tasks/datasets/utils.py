@@ -142,7 +142,11 @@ def get_xyz_coordinates(depth: Tensor, mask: Tensor, pose: Tensor, intrinsics: T
     depth = depth[flipped_mask]
 
     # Gets the pixel grid.
-    xs, ys = torch.meshgrid(torch.arange(width), torch.arange(height), indexing="xy")
+    xs, ys = torch.meshgrid(
+        torch.arange(width, device=depth.device),
+        torch.arange(height, device=depth.device),
+        indexing="xy",
+    )
     xy = torch.stack([xs, ys], dim=-1)[None, :, :].repeat_interleave(bsz, dim=0)
     xy = xy[flipped_mask.squeeze(1)]
 
