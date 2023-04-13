@@ -167,7 +167,10 @@ class ClipSdfTask(ml.SupervisedLearningTask[ClipSdfTaskConfig, Model, Batch, Out
 
         # Sample XYZ points to run through the model.
         sample_mask = torch.rand_like(mask, dtype=depth.dtype)
-        q = torch.quantile(sample_mask.float(), self.config.points_to_sample / sample_mask.numel()).to(sample_mask)
+        q = torch.quantile(
+            (sample_mask.cpu() if mask.device.type == "mps" else sample_mask).float(),
+            self.config.points_to_sample / sample_mask.numel(),
+        ).to(sample_mask)
         mask = mask | (sample_mask > q)
         sampled_xyz = get_xyz_coordinates(depth_frac * depth, mask, pose, intrinsics).to(depth)
 
