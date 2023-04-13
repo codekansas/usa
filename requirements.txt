@@ -3,6 +3,7 @@
 ffmpeg-python
 ftfy
 imageio
+jupyter
 matplotlib
 ml-starter
 more_itertools
