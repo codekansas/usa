@@ -1,0 +1,40 @@
+model:
+  name: a2c
+  state_dims: 24
+  hidden_dims: 32
+  num_layers: 2
+  action_dims: 4
+  fixed_std: true
+
+task:
+  name: rl_demo
+  finished:
+    max_steps: 1_000_000
+  dataloader:
+    train:
+      batch_size: 256
+  dataset:
+    num_update_steps: 500
+  environment:
+    num_env_workers: 8
+
+optimizer:
+  name: adam
+  lr: 3e-4
+
+lr_scheduler:
+  name: linear
+  decay: false
+
+trainer:
+  name: vanilla_rl
+  sampling:
+    num_epoch_samples: 7_500
+    max_trajectory_length: 200
+    # force_sync: True
+  grad_clipping:
+    clip_grad_norm: 2.0
+
+logger:
+  - name: stdout
+  - name: tensorboard
