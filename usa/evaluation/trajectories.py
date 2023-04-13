@@ -20,6 +20,7 @@ from usa.planners.clip_sdf import (
 from usa.tasks.clip_sdf import ClipSdfTask
 from usa.tasks.datasets.types import PosedRGBDItem
 from usa.tasks.datasets.utils import make_point_cloud_from_dataset
+import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -72,6 +73,7 @@ def print_trajectories(
     floor_ceil_heights: Tuple[float, float],
     artifacts_dir: Optional[Path] = None,
     dataset: Optional[Dataset[PosedRGBDItem]] = None,
+    save_goals: bool = True,
 ) -> None:
     start_x, start_y = start_xy
     if not planner.is_valid_starting_point((start_x, start_y)):
@@ -109,6 +111,40 @@ def print_trajectories(
                 max_batch_points=100_000,
                 max_height=maxh,  # Remove the ceiling.
             )
+
+            if save_goals:
+                all_goal_pts = []
+                for goal, trajectory in zip(goals, all_trajectories):
+                    # Gets the scores for all the points in the point cloud.
+                    point_cloud_xyz = [(p[0], p[1], p[2]) for p in point_cloud.points]
+                    scores = planner.score_locations(goal, point_cloud_xyz)
+                    point_cloud_scores = scores[:-2]
+
+                    # Gets the points higher than some threshold.
+                    top_pts = np.argsort(point_cloud_scores)
+                    top_pts_scores = np.array(point_cloud_scores)[top_pts]
+                    min_top_score = (top_pts_scores[-1] - top_pts_scores[0]) * 0.9 + top_pts_scores[0]
+                    top_pts = top_pts[top_pts_scores > min_top_score]
+                    top_pts_xyz = np.array(point_cloud_xyz)[top_pts]
+
+                    # Find the closest point in the top 10% to the end of the trahjectory
+                    xys = top_pts_xyz[:, :2]
+                    dists = xys - trajectory[-1]
+                    dists = np.linalg.norm(dists, axis=-1)
+                    goal_idx = np.argmin(dists)
+                    goal_xy = xys[goal_idx]
+                    goal_point_cloud = o3d.geometry.PointCloud()
+                    goal_point_cloud.points = o3d.utility.Vector3dVector([(goal_xy[0], goal_xy[1], halfh)])
+                    goal_point_cloud.colors = o3d.utility.Vector3dVector([[0, 1, 0]])
+                    point_cloud += goal_point_cloud
+                    all_goal_pts.append(top_pts_xyz[goal_idx, :3])
+
+                # Write out the goal points as a part of the plan - so that we can look at them
+                with open(artifacts_dir / "goals.txt", "w", encoding="utf-8") as f:
+                    for goal, goal_pt in zip(goals, all_goal_pts):
+                        x, y, z = goal_pt[0], goal_pt[1], goal_pt[2]
+                        goal_pt_str = f"{x},{y},{z}"
+                        f.write(f"{goal}\t{goal_pt_str}\n")
 
             # Adds the trajectories.
             flat_trajectories = [point for trajectory in all_trajectories for point in trajectory]
