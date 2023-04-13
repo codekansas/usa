@@ -4,18 +4,6 @@ import torch
 from torch import Tensor
 
 
-class NeRFItem(NamedTuple):
-    image: Tensor
-    pose: Tensor
-    intrinsics: Tensor
-
-    # These are only used during the testing phase, as ground truth for
-    # evaluating NeRF reconstruction quality.
-    depth: Tensor | None
-    ray_dir_high: Tensor | None
-    view_dir_high: Tensor | None
-
-
 class PosedRGBDItem(NamedTuple):
     """Defines a posed RGB image.
 
@@ -46,26 +34,3 @@ class PosedRGBDItem(NamedTuple):
         # Pose should have shape (4, 4)
         assert self.pose.shape == (4, 4)
         assert self.pose.dtype == torch.float64
-
-
-class CLIPItem(NamedTuple):
-    image: PosedRGBDItem
-    clip: Tensor
-
-    def check(self) -> None:
-        self.image.check()
-        # CLIP should have shape (C)
-        assert self.clip.dim() == 1
-
-
-class SDFItem(NamedTuple):
-    points: Tensor
-    sdf: Tensor
-
-    def check(self) -> None:
-        # Points should have shape (N, 3)
-        assert self.points.dim() == 2
-        assert self.points.shape[1] == 3
-        # SDF should have shape (N, 1)
-        assert self.sdf.dim() == 2
-        assert self.sdf.shape[1] == 1

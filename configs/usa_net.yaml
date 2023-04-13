@@ -37,7 +37,7 @@ lr_scheduler:
   name: linear
 
 trainer:
-  name: slurm
+  name: slurm_sl
   num_nodes: 1
   gpus_per_node: 1
   checkpoint:

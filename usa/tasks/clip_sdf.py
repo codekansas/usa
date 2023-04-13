@@ -18,6 +18,7 @@ from usa.models.clip import (
     cast_pretrained_model_key as cast_pretrained_clip_model_key,
     load_pretrained as load_pretrained_clip,
 )
+from usa.models.point2emb import Point2EmbModel
 from usa.tasks.datasets.posed_rgbd import Bounds, get_posed_rgbd_dataset
 from usa.tasks.datasets.types import PosedRGBDItem
 from usa.tasks.datasets.utils import (
@@ -76,7 +77,7 @@ def get_image_crop_around(
 
 
 @dataclass
-class ClipSdfTaskConfig(ml.BaseTaskConfig):
+class ClipSdfTaskConfig(ml.SupervisedLearningTaskConfig):
     dataset: str = ml.conf_field(MISSING, help="Dataset key to use")
     clip_model: str = ml.conf_field(MISSING, help="The CLIP model to load")
     queries: list[str] = ml.conf_field(MISSING, help="Queries to evaluate against")
@@ -111,8 +112,14 @@ class ClipModel:
         self.tokenizer = CLIPTokenizer()
 
 
+Model = Point2EmbModel
+Batch = PosedRGBDItem
+Output = tuple[Tensor, Tensor]
+Loss = dict[str, Tensor]
+
+
 @ml.register_task("clip_sdf", ClipSdfTaskConfig)
-class ClipSdfTask(ml.BaseTask):
+class ClipSdfTask(ml.SupervisedLearningTask[ClipSdfTaskConfig, Model, Batch, Output, Loss]):
     bounds: Tensor
     pose_bounds: Tensor
     clip_text_embs: Tensor
@@ -154,12 +161,7 @@ class ClipSdfTask(ml.BaseTask):
     def slice_height(self) -> float:
         return (self.pose_bounds[1, 0] + self.pose_bounds[1, 1]).item() / 2
 
-    def run_model(
-        self,
-        model: ml.BaseModel,
-        batch: PosedRGBDItem,
-        state: ml.State,
-    ) -> tuple[Tensor, Tensor]:
+    def run_model(self, model: Model, batch: Batch, state: ml.State) -> tuple[Tensor, Tensor]:
         _, depth, mask, intrinsics, pose = batch
         depth_frac = torch.rand_like(depth) * (1 - self.config.min_depth_prct) + self.config.min_depth_prct
 
@@ -173,13 +175,7 @@ class ClipSdfTask(ml.BaseTask):
 
         return preds, sampled_xyz
 
-    def compute_loss(
-        self,
-        model: ml.BaseModel,
-        batch: PosedRGBDItem,
-        state: ml.State,
-        output: tuple[Tensor, Tensor],
-    ) -> dict[str, Tensor]:
+    def compute_loss(self, model: Model, batch: Batch, state: ml.State, output: Output) -> Loss:
         rgb, depth, mask, intrinsics, pose = batch
         preds, xyz = output
         device, dtype = preds.device, preds.dtype
@@ -250,15 +246,6 @@ class ClipSdfTask(ml.BaseTask):
                 self.logger.log_images("cropped", crop_image)
 
         return losses
-
-    def get_single_loss(self, loss: Tensor | dict[str, Tensor]) -> tuple[Tensor, list[str]]:
-        assert isinstance(loss, dict)
-        losses: list[Tensor] = [loss["sdf"].mean()]
-        keys: list[str] = ["sdf"]
-        if "clip" in loss:
-            losses += [loss["clip"].mean()]
-            keys += ["clip"]
-        return torch.stack(losses), keys
 
     def get_clip_and_sdf_images(
         self,
