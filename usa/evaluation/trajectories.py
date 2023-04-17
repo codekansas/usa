@@ -30,7 +30,7 @@ def get_planner(
     task: ClipSdfTask,
     planner_key: PlannerType,
     floor_ceil_heights: tuple[float, float],
-    device: Type[BaseDevice],
+    device: Type[ml.BaseDevice],
     dataset: Dataset[PosedRGBDItem] | None = None,
 ) -> Planner:
     if dataset is None:

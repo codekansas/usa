@@ -80,7 +80,7 @@ def get_eval_set(
 
 
 def evaluate(eval_set: EvalSet, path_coords: PathStartCoordsAndGoal, eval_set_dir: Path) -> None:
-    configure_logging(use_tqdm=True)
+    ml.configure_logging(use_tqdm=True)
 
     # Setting this for the optimizer.
     os.environ["USE_FP64"] = "1"
