@@ -86,6 +86,7 @@ def get_image_crop_around(
 @dataclass
 class ClipSdfTaskConfig(ml.SupervisedLearningTaskConfig):
     dataset: str = ml.conf_field(MISSING, help="Dataset key to use")
+    dataset_path: str | None = ml.conf_field(None, help="Path to the dataset")
     clip_model: str = ml.conf_field(MISSING, help="The CLIP model to load")
     queries: list[str] = ml.conf_field(MISSING, help="Queries to evaluate against")
     rotate_image: bool = ml.conf_field(False, help="If set, rotate image when getting CLIP scores")
@@ -151,7 +152,7 @@ class ClipSdfTask(ml.SupervisedLearningTask[ClipSdfTaskConfig, Model, Batch, Out
         return super().apply(fn)
 
     def _get_posed_rgb_dataset(self) -> Dataset[PosedRGBDItem]:
-        return get_posed_rgbd_dataset(self.config.dataset)
+        return get_posed_rgbd_dataset(self.config.dataset, path=self.config.dataset_path)
 
     @functools.cached_property
     def _dataset(self) -> Dataset[PosedRGBDItem]:
