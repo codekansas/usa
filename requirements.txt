@@ -13,9 +13,6 @@ open3d
 opencv-python
 pandas
 pyliblzfse
-scipy
 seaborn
-timm
 torch>=2.0.0
 torchvision>=0.13.1
-typed-argument-parser

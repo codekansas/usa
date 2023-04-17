@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 # SEQS_URL = "https://drive.google.com/file/d/1IUCymFSKFOno9CRGo6gNnZieb1jDpzoi/view?usp=sharing"
 
 # From the project repo (original ZIP was corrupted for some reason).
-SEQS_URL = "https://github.com/codekansas/usa/releases/download/v1.0.0/replica.zip"
+SEQS_URL = "https://github.com/codekansas/usa/releases/download/v0.0.2/replica.zip"
 
 
 def intrinsics_matrix(fx: float, fy: float, cx: float, cy: float) -> Tensor:
