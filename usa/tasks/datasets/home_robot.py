@@ -15,7 +15,7 @@ from usa.tasks.datasets.utils import visualize_posed_rgbd_dataset
 
 logger = logging.getLogger(__name__)
 
-CHRIS_LAB_URL = "https://github.com/codekansas/usa/releases/download/v1.0.0/chris_lab.pkl"
+CHRIS_LAB_URL = "https://github.com/codekansas/usa/releases/download/v0.0.2/chris_lab.pkl"
 
 
 @dataclass

@@ -22,8 +22,8 @@ from usa.tasks.datasets.utils import visualize_posed_rgbd_dataset
 
 logger = logging.getLogger(__name__)
 
-LAB_DATASET_URL = "https://github.com/codekansas/usa/releases/download/v1.0.0/lab.r3d"
-STUDIO_DATASET_URL = "https://github.com/codekansas/usa/releases/download/v1.0.0/studio.r3d"
+LAB_DATASET_URL = "https://github.com/codekansas/usa/releases/download/v0.0.2/lab.r3d"
+STUDIO_DATASET_URL = "https://github.com/codekansas/usa/releases/download/v0.0.2/studio.r3d"
 
 
 @dataclass(frozen=True)
