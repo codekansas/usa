@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="keywords" content="Affordance,Semantics,SDF,CLIP">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>USA Net: A Unified Semantic and Affordance Representation for Robot Memory</title>
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.3.0/css/all.min.css"
+    integrity="sha512-SzlrxWUlpfuzQ+pcUCosxcglQRNAq/DZjVsC0lE40xsADsfeQoEypE+enwcOiGjk/bSuGGKHEyjSoQ1zVisanQ=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.4/css/bulma.min.css"
+    integrity="sha512-HqxHUkJM0SYcbvxUw5P60SzdOTy/QVwA1JJrvaXJv4q7lmbDZCmZaqz01UPOaQveoxfYRv1tHozWGPMcuTBuvQ=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="css/style.css">
+
+  <!-- Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.3/jquery.min.js"
+    integrity="sha512-STof4xm1wgkfm7heWqFJVn58Hm3EtS31XFaagaa8VMReCXAkQnJZ+jEy8PCC/iT18dFy95WcExNHFTqLyp72eQ=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"
+    integrity="sha512-dLxUelApnYxpLt6K2iomGngnHO83iUvZytA3YjDUCjT0HDOHKXnVYdf3hU4JjM8uEhxf9nD1/ey98U3t2vZ0qQ=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+  <!-- Site-specific scripts -->
+  <script src="js/PLYLoader.js"></script>
+  <script src="js/OrbitControls.js"></script>
+  <script src="js/semantics.js"></script>
+  <script src="js/path_lengths.js"></script>
+</head>
+
+<body>
+
+  <!-- Header section -->
+  <section class="hero">
+    <div class="hero-body">
+      <div class="container">
+        <div class="columns is-centered">
+          <div class="column has-text-centered">
+
+            <!-- Title -->
+            <h1 class="title is-1 publication-title">
+              USA Net: Unified Semantic and Affordance
+              <br />
+              Representations for Robot Memory
+            </h1>
+
+            <!-- Authors -->
+            <div class="is-size-5 publication-authors">
+              <span class="author-block">
+                <a href="https://ben.bolte.cc/">Ben Bolte</a>&emsp;
+              </span>
+              <span class="author-block">
+                <a href="https://www.linkedin.com/in/austinspwang">Austin Wang</a>&emsp;
+              </span>
+              <span class="author-block">
+                <a href="https://sites.google.com/view/tyjimmyyang">Jimmy Yang</a>&emsp;
+              </span>
+              <span class="author-block">
+                <a href="https://www.linkedin.com/in/mrinalkalakrishnan/">Mrinal Kalakrishnan</a>&emsp;
+              </span>
+              <span class="author-block">
+                <a href="https://www.mustafamukadam.com/">Mustafa Mukadam</a>&emsp;
+              </span>
+              <span class="author-block">
+                <a href="https://cpaxton.github.io/">Chris Paxton</a>&emsp;
+              </span>
+            </div>
+
+            <!-- Affiliations -->
+            <div class="is-size-5 publication-authors">
+              <span class="author-block">
+                Meta AI &emsp;
+              </span>
+            </div>
+
+            <br>
+
+            <!-- Links -->
+            <div class="column has-text-centered">
+              <div class="publication-links">
+                <span class="link-block">
+                  <a href="https://arxiv.org/abs/2304.12164" class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon">
+                      <i class="fas fa-file-pdf"></i>
+                    </span>
+                    <span>Paper</span>
+                  </a>
+                </span>
+                <span class="link-block">
+                  <a href="https://github.com/codekansas/usa" class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon">
+                      <i class="fab fa-github"></i>
+                    </span>
+                    <span>Code</span>
+                  </a>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Video section -->
+  <section class="section">
+    <div class="container">
+      <div class="columns is-centered">
+        <div class="column is-8 has-text-centered">
+          <div class="video-container">
+            <video autoplay loop muted playsinline id="operating-video">
+              <source src="videos/usa-net.mp4" type="video/mp4">
+            </video>
+          </div>
+          <div class="buttons is-centered">
+            <button class="button is-dark is-rounded"
+              onclick="document.getElementById('operating-video').playbackRate = 1.0;">
+              <span class="icon">
+                <i class="fas fa-play"></i>
+              </span>
+              <span>Real-Time</span>
+            </button>
+            <button class="button is-dark is-rounded"
+              onclick="document.getElementById('operating-video').playbackRate = 4.0;">
+              <span class="icon">
+                <i class="fas fa-play"></i>
+              </span>
+              <span>Fast</span>
+            </button>
+          </div>
+        </div>
+      </div>
+  </section>
+
+  <!-- Semantic plans section -->
+  <section class="section">
+    <div class="container">
+      <div class="columns is-centered has-text-centered">
+        <div class="column is-two-thirds">
+
+          <!-- Sample point cloud -->
+          <div class="content">
+            <div class="content has-text-justified">
+              <div id="semantics-point-cloud" style="aspect-ratio: 2 / 1; margin: auto;"></div>
+            </div>
+            <div class="content has-text-centered">
+              <p id="semantics-point-cloud-label">Loading...</p>
+            </div>
+            <div class="content has-text-centered">
+              <p id="semantics-planner-label">Loading...</p>
+            </div>
+
+            <!-- Scene buttons -->
+            <div class="content" id="semantics-point-cloud-scene-buttons"></div>
+
+            <!-- Path buttons -->
+            <div class="content" id="semantics-point-cloud-path-buttons"></div>
+
+            <!-- Planner buttons -->
+            <div class="content" id="semantics-point-cloud-planner-buttons"></div>
+
+            <div class="content has-text-justified" style="max-width: 400px; margin: auto;">
+              <div id="semantics-video"></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Abstract section -->
+  <section class="section">
+    <div class="container">
+      <div class="columns is-centered has-text-centered">
+        <div class="column is-two-thirds">
+
+          <!-- Abstract -->
+          <div class="content">
+            <h2 class="title is-2">Abstract</h2>
+            <div class="content has-text-justified">
+              <p>
+                In order for robots to follow open-ended instructions like <i>go open the brown cabinet over the
+                  sink</i>, they require an understanding of both the scene geometry and the semantics of their
+                environment. Robotic systems often handle these through separate pipelines, sometimes using very
+                different representation spaces, which can be suboptimal when the two objectives conflict. In this
+                work,
+                we present USA Net, a simple method for constructing a world representation that encodes both the
+                semantics and spatial affordances of a scene in a differentiable map. This allows us to build a
+                gradient-based planner which can navigate to locations in the scene specified using open-ended
+                vocabulary. We use this planner to consistently generate trajectories which are both shorter 5-10%
+                shorter and 10-30% closer to our goal query in CLIP embedding space than paths from comparable
+                grid-based planners which don't leverage gradient information. To our knowledge, this is the first
+                end-to-end differentiable planner optimizes for both semantics and affordance in a single implicit
+                map.
+              </p>
+            </div>
+          </div>
+
+          <!-- Abstract, but bullet points -->
+          <div class="content">
+            <h2 class="title is-2">Bullet Points</h2>
+            <div class="content has-text-justified">
+              <ul>
+                <li>
+                  <p>
+                    Robots often want to navigate to a location in the world specified using open-ended vocabulary
+                  </p>
+                </li>
+                <li>
+                  <p>
+                    A differentiable planner requires a representation of the world which encodes both
+                    <i>affordance</i>
+                    (so that it doesn't run into things) and <i>semantics</i> (so that it knows where to go to reach
+                    the
+                    goal)
+                  </p>
+                </li>
+                <li>
+                  <p>
+                    We present a simple world representation which uses an MLP to map each coordinate in a scene to a
+                    semantic embedding and the distance to the nearest obstacle
+                  </p>
+                </li>
+                <li>
+                  <p>
+                    This representation allows us to implement various planners on top of it, which we evaluate on a
+                    variety of scenes and goals
+                  </p>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Model architecture -->
+  <section class="section">
+    <div class="container">
+      <div class="columns is-centered has-text-centered">
+        <div class="column is-two-thirds">
+
+          <!-- Model architecture -->
+          <div class="content">
+            <h2 class="title is-2">Model Architecture</h2>
+            <div class="content has-text-justified">
+              <p>
+                We use a simple MLP to map each coordinate in a scene to a semantic embedding and the distance to the
+                nearest obstacle. The semantic representation is the CLIP embedding of a random crop of the scene,
+                centered at the nearest neighbor surface point to the given coordinate. The loss when supervising this
+                embedding is weighted by the distance to the point. The affordance representation is the SDF value at
+                the given coordinate. We adapt the ground truth SDF value to account for noise from our real-world
+                depth
+                sensor.
+              </p>
+            </div>
+            <div class="content has-text-justified">
+              <div class="content has-text-centered">
+                <img src="images/architecture.svg" alt="Model architecture" />
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Path lengths -->
+  <section class="section">
+    <div class="container">
+      <div class="columns is-centered has-text-centered">
+        <div class="column is-two-thirds">
+
+          <!-- Path lengths explanation -->
+          <div class="content">
+            <h2 class="title is-2">Path Lengths</h2>
+            <div class="content has-text-justified">
+              <p>
+                The figures below show the path lengths of different planners navigating between two points using the
+                affordance representation. Because the gradient-based planner operates in continous space it is able
+                to
+                achieve smoother and shorter paths than the grid-based planners. We compare with a baseline planner
+                constructed on top of the occupancy map constructed from the raw point cloud.
+              </p>
+            </div>
+          </div>
+
+          <!-- Sample path lengths -->
+          <div class="content">
+            <div class="content">
+              <div id="path-lengths-point-cloud" style="aspect-ratio: 2 / 1; margin: auto;"></div>
+            </div>
+
+            <!-- Scene buttons -->
+            <div class="content" id="path-lengths-point-cloud-scene-buttons"></div>
+
+            <!-- Path buttons -->
+            <div class="content" id="path-lengths-point-cloud-path-buttons"></div>
+
+            <div class="content">
+              <div id="path-lengths-images" class="columns is-mobile is-centered is-vcentered"></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!--
+  <section class="section" id="BibTeX">
+    <div class="container content">
+      <h2 class="title">BibTeX</h2>
+      <pre><code>@article{bolte2023usanet,
+  title={USA-Net: A Unified Semantic and Affordance Representation for Robot Memory},
+  author={Bolte, Benjamin and Wang, Austin and Yang, Jimmy and Mukadam, Mustafa and Paxton, Chris},
+  journal={},
+  year={2023}
+}</code></pre>
+    </div>
+  </section>
+  -->
+
+  <section class="section">
+    <div class="container content">
+      <h2 class="title">Contact</h2>
+      <p>
+        If you have any questions, please feel free to reach out to <a href="mailto:ben@bolte.cc">Ben Bolte</a>.
+      </p>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="columns is-centered">
+        <div class="column is-8">
+          <div class="content">
+            <p>
+              Copyright © 2023 Meta Platforms, Inc
+            </p>
+            <p>
+              <b>Legal</b>:
+              <a href="https://opensource.facebook.com/legal/privacy/" target="_blank" rel="noreferrer noopener">
+                Privacy
+              </a> and
+              <a href="https://opensource.facebook.com/legal/terms/" target="_blank" rel="noreferrer noopener">
+                Terms
+              </a>
+            </p>
+            <p>
+              Page adapted from <a href="https://nerfies.github.io/">here</a>.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+</body>
+
+</html>

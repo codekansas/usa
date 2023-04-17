@@ -1,0 +1,19 @@
+[1;35mINFOALL[0m  [1;90m2023-03-01 13:25:04[0m [ml.trainers.mixins.device.auto] Device: [cuda:0]
+[1;33mWARNING[0m  [1;90m2023-03-01 13:25:07[0m [ml.utils.timer] Finished loading pretrained CLIP model in 3.45 seconds
+  [1;36mINFO[0m   [1;90m2023-03-01 13:25:10[0m [ml.trainers.mixins.device.gpu] Using FP64
+  [1;36mINFO[0m   [1;90m2023-03-01 13:25:26[0m [__main__] Evaluating kitchen_stretch on 5 paths
+  [1;36mINFO[0m   [1;90m2023-03-01 13:27:33[0m [__main__] Point cloud path: /private/home/bbolte/Experiments/Evaluation/today/language-navigation/eval-20230301-132436/kitchen_stretch/point_cloud.ply
+  [1;36mINFO[0m   [1;90m2023-03-01 13:27:53[0m [__main__] Video path: /private/home/bbolte/Experiments/Evaluation/today/language-navigation/eval-20230301-132436/kitchen_stretch/video.mp4
+  [1;36mINFO[0m   [1;90m2023-03-01 13:27:54[0m [__main__] Path point cloud path: /private/home/bbolte/Experiments/Evaluation/today/language-navigation/eval-20230301-132436/kitchen_stretch/path_point_cloud.ply
+  [1;36mINFO[0m   [1;90m2023-03-01 13:27:54[0m [__main__] Evaluating a_star_10_cm_clip_sdf
+  [1;36mINFO[0m   [1;90m2023-03-01 13:28:00[0m [__main__] Evaluating a_star_20_cm_clip_sdf
+  [1;36mINFO[0m   [1;90m2023-03-01 13:28:04[0m [__main__] Evaluating a_star_30_cm_clip_sdf
+  [1;36mINFO[0m   [1;90m2023-03-01 13:28:08[0m [__main__] Evaluating a_star_40_cm_clip_sdf
+  [1;36mINFO[0m   [1;90m2023-03-01 13:28:12[0m [__main__] Evaluating gradient_clip_sdf
+planner
+a_star_10_cm_clip_sdf    0.979
+a_star_20_cm_clip_sdf    0.889
+a_star_30_cm_clip_sdf    0.853
+a_star_40_cm_clip_sdf    0.775
+gradient_clip_sdf        1.000
+Name: rel_score, dtype: float64

@@ -1,0 +1,467 @@
+[1;35mINFOALL[0m  [1;90m2023-03-01 13:25:30[0m [ml.trainers.mixins.device.auto] Device: [cuda:0]
+[1;33mWARNING[0m  [1;90m2023-03-01 13:25:36[0m [ml.utils.timer] Finished loading pretrained CLIP model in 5.73 seconds
+  [1;36mINFO[0m   [1;90m2023-03-01 13:25:39[0m [ml.trainers.mixins.device.gpu] Using FP64
+  [1;36mINFO[0m   [1;90m2023-03-01 13:25:39[0m [ml.tasks.datasets.impl.r3d] Preprocessing R3D arrays
+  [1;36mINFO[0m   [1;90m2023-03-01 13:26:01[0m [__main__] Plotted map for a_star_10_cm_clip_sdf
+  [1;36mINFO[0m   [1;90m2023-03-01 13:26:01[0m [__main__] Plotted map for a_star_20_cm_clip_sdf
+  [1;36mINFO[0m   [1;90m2023-03-01 13:26:01[0m [__main__] Plotted map for a_star_30_cm_clip_sdf
+  [1;36mINFO[0m   [1;90m2023-03-01 13:26:01[0m [__main__] Plotted map for a_star_40_cm_clip_sdf
+  [1;36mINFO[0m   [1;90m2023-03-01 13:26:09[0m [__main__] Plotted map for gradient_clip_sdf
+  [1;36mINFO[0m   [1;90m2023-03-01 13:26:09[0m [__main__] Plotted map for a_star_10_cm_occ_map
+  [1;36mINFO[0m   [1;90m2023-03-01 13:26:12[0m [__main__] Evaluating studio_r3d on 100 paths
+  [1;36mINFO[0m   [1;90m2023-03-01 13:26:12[0m [__main__] Evaluating a_star_10_cm_clip_sdf
+  [1;36mINFO[0m   [1;90m2023-03-01 13:26:16[0m [__main__] Evaluating a_star_10_cm_occ_map
+  [1;36mINFO[0m   [1;90m2023-03-01 13:26:20[0m [__main__] Evaluating a_star_20_cm_clip_sdf
+  [1;36mINFO[0m   [1;90m2023-03-01 13:26:24[0m [__main__] Evaluating a_star_30_cm_clip_sdf
+  [1;36mINFO[0m   [1;90m2023-03-01 13:26:28[0m [__main__] Evaluating a_star_40_cm_clip_sdf
+ [1;31mERROR[0m   [1;90m2023-03-01 13:26:29[0m [__main__] Exception while getting path
+Traceback (most recent call last):
+  File "/private/home/bbolte/Github/usa/ml/evaluation/evaluations/path_length.py", line 201, in evaluate
+    path = planner.plan(start, end)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/clip_sdf.py", line 208, in plan
+    return self.a_star_planner.plan(start_xy, end_xy)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/common.py", line 189, in plan
+    raise ValueError("No path found")
+ValueError: No path found
+ [1;31mERROR[0m   [1;90m2023-03-01 13:26:29[0m [__main__] Exception while getting path
+Traceback (most recent call last):
+  File "/private/home/bbolte/Github/usa/ml/evaluation/evaluations/path_length.py", line 201, in evaluate
+    path = planner.plan(start, end)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/clip_sdf.py", line 208, in plan
+    return self.a_star_planner.plan(start_xy, end_xy)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/common.py", line 189, in plan
+    raise ValueError("No path found")
+ValueError: No path found
+ [1;31mERROR[0m   [1;90m2023-03-01 13:26:29[0m [__main__] Exception while getting path
+Traceback (most recent call last):
+  File "/private/home/bbolte/Github/usa/ml/evaluation/evaluations/path_length.py", line 201, in evaluate
+    path = planner.plan(start, end)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/clip_sdf.py", line 208, in plan
+    return self.a_star_planner.plan(start_xy, end_xy)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/common.py", line 189, in plan
+    raise ValueError("No path found")
+ValueError: No path found
+ [1;31mERROR[0m   [1;90m2023-03-01 13:26:29[0m [__main__] Exception while getting path
+Traceback (most recent call last):
+  File "/private/home/bbolte/Github/usa/ml/evaluation/evaluations/path_length.py", line 201, in evaluate
+    path = planner.plan(start, end)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/clip_sdf.py", line 208, in plan
+    return self.a_star_planner.plan(start_xy, end_xy)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/common.py", line 189, in plan
+    raise ValueError("No path found")
+ValueError: No path found
+ [1;31mERROR[0m   [1;90m2023-03-01 13:26:30[0m [__main__] Exception while getting path
+Traceback (most recent call last):
+  File "/private/home/bbolte/Github/usa/ml/evaluation/evaluations/path_length.py", line 201, in evaluate
+    path = planner.plan(start, end)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/clip_sdf.py", line 208, in plan
+    return self.a_star_planner.plan(start_xy, end_xy)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/common.py", line 189, in plan
+    raise ValueError("No path found")
+ValueError: No path found
+ [1;31mERROR[0m   [1;90m2023-03-01 13:26:30[0m [__main__] Exception while getting path
+Traceback (most recent call last):
+  File "/private/home/bbolte/Github/usa/ml/evaluation/evaluations/path_length.py", line 201, in evaluate
+    path = planner.plan(start, end)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/clip_sdf.py", line 208, in plan
+    return self.a_star_planner.plan(start_xy, end_xy)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/common.py", line 189, in plan
+    raise ValueError("No path found")
+ValueError: No path found
+ [1;31mERROR[0m   [1;90m2023-03-01 13:26:30[0m [__main__] Exception while getting path
+Traceback (most recent call last):
+  File "/private/home/bbolte/Github/usa/ml/evaluation/evaluations/path_length.py", line 201, in evaluate
+    path = planner.plan(start, end)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/clip_sdf.py", line 208, in plan
+    return self.a_star_planner.plan(start_xy, end_xy)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/common.py", line 189, in plan
+    raise ValueError("No path found")
+ValueError: No path found
+ [1;31mERROR[0m   [1;90m2023-03-01 13:26:30[0m [__main__] Exception while getting path
+Traceback (most recent call last):
+  File "/private/home/bbolte/Github/usa/ml/evaluation/evaluations/path_length.py", line 201, in evaluate
+    path = planner.plan(start, end)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/clip_sdf.py", line 208, in plan
+    return self.a_star_planner.plan(start_xy, end_xy)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/common.py", line 189, in plan
+    raise ValueError("No path found")
+ValueError: No path found
+ [1;31mERROR[0m   [1;90m2023-03-01 13:26:30[0m [__main__] Exception while getting path
+Traceback (most recent call last):
+  File "/private/home/bbolte/Github/usa/ml/evaluation/evaluations/path_length.py", line 201, in evaluate
+    path = planner.plan(start, end)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/clip_sdf.py", line 208, in plan
+    return self.a_star_planner.plan(start_xy, end_xy)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/common.py", line 189, in plan
+    raise ValueError("No path found")
+ValueError: No path found
+ [1;31mERROR[0m   [1;90m2023-03-01 13:26:30[0m [__main__] Exception while getting path
+Traceback (most recent call last):
+  File "/private/home/bbolte/Github/usa/ml/evaluation/evaluations/path_length.py", line 201, in evaluate
+    path = planner.plan(start, end)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/clip_sdf.py", line 208, in plan
+    return self.a_star_planner.plan(start_xy, end_xy)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/common.py", line 189, in plan
+    raise ValueError("No path found")
+ValueError: No path found
+ [1;31mERROR[0m   [1;90m2023-03-01 13:26:30[0m [__main__] Exception while getting path
+Traceback (most recent call last):
+  File "/private/home/bbolte/Github/usa/ml/evaluation/evaluations/path_length.py", line 201, in evaluate
+    path = planner.plan(start, end)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/clip_sdf.py", line 208, in plan
+    return self.a_star_planner.plan(start_xy, end_xy)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/common.py", line 189, in plan
+    raise ValueError("No path found")
+ValueError: No path found
+ [1;31mERROR[0m   [1;90m2023-03-01 13:26:30[0m [__main__] Exception while getting path
+Traceback (most recent call last):
+  File "/private/home/bbolte/Github/usa/ml/evaluation/evaluations/path_length.py", line 201, in evaluate
+    path = planner.plan(start, end)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/clip_sdf.py", line 208, in plan
+    return self.a_star_planner.plan(start_xy, end_xy)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/common.py", line 189, in plan
+    raise ValueError("No path found")
+ValueError: No path found
+ [1;31mERROR[0m   [1;90m2023-03-01 13:26:30[0m [__main__] Exception while getting path
+Traceback (most recent call last):
+  File "/private/home/bbolte/Github/usa/ml/evaluation/evaluations/path_length.py", line 201, in evaluate
+    path = planner.plan(start, end)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/clip_sdf.py", line 208, in plan
+    return self.a_star_planner.plan(start_xy, end_xy)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/common.py", line 189, in plan
+    raise ValueError("No path found")
+ValueError: No path found
+ [1;31mERROR[0m   [1;90m2023-03-01 13:26:30[0m [__main__] Exception while getting path
+Traceback (most recent call last):
+  File "/private/home/bbolte/Github/usa/ml/evaluation/evaluations/path_length.py", line 201, in evaluate
+    path = planner.plan(start, end)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/clip_sdf.py", line 208, in plan
+    return self.a_star_planner.plan(start_xy, end_xy)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/common.py", line 189, in plan
+    raise ValueError("No path found")
+ValueError: No path found
+ [1;31mERROR[0m   [1;90m2023-03-01 13:26:30[0m [__main__] Exception while getting path
+Traceback (most recent call last):
+  File "/private/home/bbolte/Github/usa/ml/evaluation/evaluations/path_length.py", line 201, in evaluate
+    path = planner.plan(start, end)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/clip_sdf.py", line 208, in plan
+    return self.a_star_planner.plan(start_xy, end_xy)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/common.py", line 189, in plan
+    raise ValueError("No path found")
+ValueError: No path found
+ [1;31mERROR[0m   [1;90m2023-03-01 13:26:30[0m [__main__] Exception while getting path
+Traceback (most recent call last):
+  File "/private/home/bbolte/Github/usa/ml/evaluation/evaluations/path_length.py", line 201, in evaluate
+    path = planner.plan(start, end)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/clip_sdf.py", line 208, in plan
+    return self.a_star_planner.plan(start_xy, end_xy)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/common.py", line 189, in plan
+    raise ValueError("No path found")
+ValueError: No path found
+ [1;31mERROR[0m   [1;90m2023-03-01 13:26:30[0m [__main__] Exception while getting path
+Traceback (most recent call last):
+  File "/private/home/bbolte/Github/usa/ml/evaluation/evaluations/path_length.py", line 201, in evaluate
+    path = planner.plan(start, end)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/clip_sdf.py", line 208, in plan
+    return self.a_star_planner.plan(start_xy, end_xy)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/common.py", line 189, in plan
+    raise ValueError("No path found")
+ValueError: No path found
+ [1;31mERROR[0m   [1;90m2023-03-01 13:26:30[0m [__main__] Exception while getting path
+Traceback (most recent call last):
+  File "/private/home/bbolte/Github/usa/ml/evaluation/evaluations/path_length.py", line 201, in evaluate
+    path = planner.plan(start, end)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/clip_sdf.py", line 208, in plan
+    return self.a_star_planner.plan(start_xy, end_xy)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/common.py", line 189, in plan
+    raise ValueError("No path found")
+ValueError: No path found
+ [1;31mERROR[0m   [1;90m2023-03-01 13:26:30[0m [__main__] Exception while getting path
+Traceback (most recent call last):
+  File "/private/home/bbolte/Github/usa/ml/evaluation/evaluations/path_length.py", line 201, in evaluate
+    path = planner.plan(start, end)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/clip_sdf.py", line 208, in plan
+    return self.a_star_planner.plan(start_xy, end_xy)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/common.py", line 189, in plan
+    raise ValueError("No path found")
+ValueError: No path found
+ [1;31mERROR[0m   [1;90m2023-03-01 13:26:30[0m [__main__] Exception while getting path
+Traceback (most recent call last):
+  File "/private/home/bbolte/Github/usa/ml/evaluation/evaluations/path_length.py", line 201, in evaluate
+    path = planner.plan(start, end)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/clip_sdf.py", line 208, in plan
+    return self.a_star_planner.plan(start_xy, end_xy)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/common.py", line 189, in plan
+    raise ValueError("No path found")
+ValueError: No path found
+ [1;31mERROR[0m   [1;90m2023-03-01 13:26:30[0m [__main__] Exception while getting path
+Traceback (most recent call last):
+  File "/private/home/bbolte/Github/usa/ml/evaluation/evaluations/path_length.py", line 201, in evaluate
+    path = planner.plan(start, end)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/clip_sdf.py", line 208, in plan
+    return self.a_star_planner.plan(start_xy, end_xy)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/common.py", line 189, in plan
+    raise ValueError("No path found")
+ValueError: No path found
+ [1;31mERROR[0m   [1;90m2023-03-01 13:26:30[0m [__main__] Exception while getting path
+Traceback (most recent call last):
+  File "/private/home/bbolte/Github/usa/ml/evaluation/evaluations/path_length.py", line 201, in evaluate
+    path = planner.plan(start, end)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/clip_sdf.py", line 208, in plan
+    return self.a_star_planner.plan(start_xy, end_xy)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/common.py", line 189, in plan
+    raise ValueError("No path found")
+ValueError: No path found
+ [1;31mERROR[0m   [1;90m2023-03-01 13:26:30[0m [__main__] Exception while getting path
+Traceback (most recent call last):
+  File "/private/home/bbolte/Github/usa/ml/evaluation/evaluations/path_length.py", line 201, in evaluate
+    path = planner.plan(start, end)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/clip_sdf.py", line 208, in plan
+    return self.a_star_planner.plan(start_xy, end_xy)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/common.py", line 189, in plan
+    raise ValueError("No path found")
+ValueError: No path found
+ [1;31mERROR[0m   [1;90m2023-03-01 13:26:30[0m [__main__] Exception while getting path
+Traceback (most recent call last):
+  File "/private/home/bbolte/Github/usa/ml/evaluation/evaluations/path_length.py", line 201, in evaluate
+    path = planner.plan(start, end)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/clip_sdf.py", line 208, in plan
+    return self.a_star_planner.plan(start_xy, end_xy)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/common.py", line 189, in plan
+    raise ValueError("No path found")
+ValueError: No path found
+ [1;31mERROR[0m   [1;90m2023-03-01 13:26:30[0m [__main__] Exception while getting path
+Traceback (most recent call last):
+  File "/private/home/bbolte/Github/usa/ml/evaluation/evaluations/path_length.py", line 201, in evaluate
+    path = planner.plan(start, end)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/clip_sdf.py", line 208, in plan
+    return self.a_star_planner.plan(start_xy, end_xy)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/common.py", line 189, in plan
+    raise ValueError("No path found")
+ValueError: No path found
+ [1;31mERROR[0m   [1;90m2023-03-01 13:26:30[0m [__main__] Exception while getting path
+Traceback (most recent call last):
+  File "/private/home/bbolte/Github/usa/ml/evaluation/evaluations/path_length.py", line 201, in evaluate
+    path = planner.plan(start, end)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/clip_sdf.py", line 208, in plan
+    return self.a_star_planner.plan(start_xy, end_xy)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/common.py", line 189, in plan
+    raise ValueError("No path found")
+ValueError: No path found
+ [1;31mERROR[0m   [1;90m2023-03-01 13:26:30[0m [__main__] Exception while getting path
+Traceback (most recent call last):
+  File "/private/home/bbolte/Github/usa/ml/evaluation/evaluations/path_length.py", line 201, in evaluate
+    path = planner.plan(start, end)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/clip_sdf.py", line 208, in plan
+    return self.a_star_planner.plan(start_xy, end_xy)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/common.py", line 189, in plan
+    raise ValueError("No path found")
+ValueError: No path found
+ [1;31mERROR[0m   [1;90m2023-03-01 13:26:30[0m [__main__] Exception while getting path
+Traceback (most recent call last):
+  File "/private/home/bbolte/Github/usa/ml/evaluation/evaluations/path_length.py", line 201, in evaluate
+    path = planner.plan(start, end)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/clip_sdf.py", line 208, in plan
+    return self.a_star_planner.plan(start_xy, end_xy)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/common.py", line 189, in plan
+    raise ValueError("No path found")
+ValueError: No path found
+ [1;31mERROR[0m   [1;90m2023-03-01 13:26:30[0m [__main__] Exception while getting path
+Traceback (most recent call last):
+  File "/private/home/bbolte/Github/usa/ml/evaluation/evaluations/path_length.py", line 201, in evaluate
+    path = planner.plan(start, end)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/clip_sdf.py", line 208, in plan
+    return self.a_star_planner.plan(start_xy, end_xy)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/common.py", line 189, in plan
+    raise ValueError("No path found")
+ValueError: No path found
+ [1;31mERROR[0m   [1;90m2023-03-01 13:26:30[0m [__main__] Exception while getting path
+Traceback (most recent call last):
+  File "/private/home/bbolte/Github/usa/ml/evaluation/evaluations/path_length.py", line 201, in evaluate
+    path = planner.plan(start, end)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/clip_sdf.py", line 208, in plan
+    return self.a_star_planner.plan(start_xy, end_xy)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/common.py", line 189, in plan
+    raise ValueError("No path found")
+ValueError: No path found
+ [1;31mERROR[0m   [1;90m2023-03-01 13:26:30[0m [__main__] Exception while getting path
+Traceback (most recent call last):
+  File "/private/home/bbolte/Github/usa/ml/evaluation/evaluations/path_length.py", line 201, in evaluate
+    path = planner.plan(start, end)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/clip_sdf.py", line 208, in plan
+    return self.a_star_planner.plan(start_xy, end_xy)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/common.py", line 189, in plan
+    raise ValueError("No path found")
+ValueError: No path found
+ [1;31mERROR[0m   [1;90m2023-03-01 13:26:30[0m [__main__] Exception while getting path
+Traceback (most recent call last):
+  File "/private/home/bbolte/Github/usa/ml/evaluation/evaluations/path_length.py", line 201, in evaluate
+    path = planner.plan(start, end)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/clip_sdf.py", line 208, in plan
+    return self.a_star_planner.plan(start_xy, end_xy)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/common.py", line 189, in plan
+    raise ValueError("No path found")
+ValueError: No path found
+ [1;31mERROR[0m   [1;90m2023-03-01 13:26:30[0m [__main__] Exception while getting path
+Traceback (most recent call last):
+  File "/private/home/bbolte/Github/usa/ml/evaluation/evaluations/path_length.py", line 201, in evaluate
+    path = planner.plan(start, end)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/clip_sdf.py", line 208, in plan
+    return self.a_star_planner.plan(start_xy, end_xy)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/common.py", line 189, in plan
+    raise ValueError("No path found")
+ValueError: No path found
+ [1;31mERROR[0m   [1;90m2023-03-01 13:26:30[0m [__main__] Exception while getting path
+Traceback (most recent call last):
+  File "/private/home/bbolte/Github/usa/ml/evaluation/evaluations/path_length.py", line 201, in evaluate
+    path = planner.plan(start, end)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/clip_sdf.py", line 208, in plan
+    return self.a_star_planner.plan(start_xy, end_xy)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/common.py", line 189, in plan
+    raise ValueError("No path found")
+ValueError: No path found
+ [1;31mERROR[0m   [1;90m2023-03-01 13:26:30[0m [__main__] Exception while getting path
+Traceback (most recent call last):
+  File "/private/home/bbolte/Github/usa/ml/evaluation/evaluations/path_length.py", line 201, in evaluate
+    path = planner.plan(start, end)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/clip_sdf.py", line 208, in plan
+    return self.a_star_planner.plan(start_xy, end_xy)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/common.py", line 189, in plan
+    raise ValueError("No path found")
+ValueError: No path found
+ [1;31mERROR[0m   [1;90m2023-03-01 13:26:30[0m [__main__] Exception while getting path
+Traceback (most recent call last):
+  File "/private/home/bbolte/Github/usa/ml/evaluation/evaluations/path_length.py", line 201, in evaluate
+    path = planner.plan(start, end)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/clip_sdf.py", line 208, in plan
+    return self.a_star_planner.plan(start_xy, end_xy)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/common.py", line 189, in plan
+    raise ValueError("No path found")
+ValueError: No path found
+ [1;31mERROR[0m   [1;90m2023-03-01 13:26:30[0m [__main__] Exception while getting path
+Traceback (most recent call last):
+  File "/private/home/bbolte/Github/usa/ml/evaluation/evaluations/path_length.py", line 201, in evaluate
+    path = planner.plan(start, end)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/clip_sdf.py", line 208, in plan
+    return self.a_star_planner.plan(start_xy, end_xy)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/common.py", line 189, in plan
+    raise ValueError("No path found")
+ValueError: No path found
+ [1;31mERROR[0m   [1;90m2023-03-01 13:26:30[0m [__main__] Exception while getting path
+Traceback (most recent call last):
+  File "/private/home/bbolte/Github/usa/ml/evaluation/evaluations/path_length.py", line 201, in evaluate
+    path = planner.plan(start, end)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/clip_sdf.py", line 208, in plan
+    return self.a_star_planner.plan(start_xy, end_xy)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/common.py", line 189, in plan
+    raise ValueError("No path found")
+ValueError: No path found
+ [1;31mERROR[0m   [1;90m2023-03-01 13:26:30[0m [__main__] Exception while getting path
+Traceback (most recent call last):
+  File "/private/home/bbolte/Github/usa/ml/evaluation/evaluations/path_length.py", line 201, in evaluate
+    path = planner.plan(start, end)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/clip_sdf.py", line 208, in plan
+    return self.a_star_planner.plan(start_xy, end_xy)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/common.py", line 189, in plan
+    raise ValueError("No path found")
+ValueError: No path found
+ [1;31mERROR[0m   [1;90m2023-03-01 13:26:30[0m [__main__] Exception while getting path
+Traceback (most recent call last):
+  File "/private/home/bbolte/Github/usa/ml/evaluation/evaluations/path_length.py", line 201, in evaluate
+    path = planner.plan(start, end)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/clip_sdf.py", line 208, in plan
+    return self.a_star_planner.plan(start_xy, end_xy)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/common.py", line 189, in plan
+    raise ValueError("No path found")
+ValueError: No path found
+ [1;31mERROR[0m   [1;90m2023-03-01 13:26:30[0m [__main__] Exception while getting path
+Traceback (most recent call last):
+  File "/private/home/bbolte/Github/usa/ml/evaluation/evaluations/path_length.py", line 201, in evaluate
+    path = planner.plan(start, end)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/clip_sdf.py", line 208, in plan
+    return self.a_star_planner.plan(start_xy, end_xy)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/common.py", line 189, in plan
+    raise ValueError("No path found")
+ValueError: No path found
+ [1;31mERROR[0m   [1;90m2023-03-01 13:26:30[0m [__main__] Exception while getting path
+Traceback (most recent call last):
+  File "/private/home/bbolte/Github/usa/ml/evaluation/evaluations/path_length.py", line 201, in evaluate
+    path = planner.plan(start, end)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/clip_sdf.py", line 208, in plan
+    return self.a_star_planner.plan(start_xy, end_xy)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/common.py", line 189, in plan
+    raise ValueError("No path found")
+ValueError: No path found
+ [1;31mERROR[0m   [1;90m2023-03-01 13:26:30[0m [__main__] Exception while getting path
+Traceback (most recent call last):
+  File "/private/home/bbolte/Github/usa/ml/evaluation/evaluations/path_length.py", line 201, in evaluate
+    path = planner.plan(start, end)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/clip_sdf.py", line 208, in plan
+    return self.a_star_planner.plan(start_xy, end_xy)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/common.py", line 189, in plan
+    raise ValueError("No path found")
+ValueError: No path found
+ [1;31mERROR[0m   [1;90m2023-03-01 13:26:30[0m [__main__] Exception while getting path
+Traceback (most recent call last):
+  File "/private/home/bbolte/Github/usa/ml/evaluation/evaluations/path_length.py", line 201, in evaluate
+    path = planner.plan(start, end)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/clip_sdf.py", line 208, in plan
+    return self.a_star_planner.plan(start_xy, end_xy)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/common.py", line 189, in plan
+    raise ValueError("No path found")
+ValueError: No path found
+ [1;31mERROR[0m   [1;90m2023-03-01 13:26:30[0m [__main__] Exception while getting path
+Traceback (most recent call last):
+  File "/private/home/bbolte/Github/usa/ml/evaluation/evaluations/path_length.py", line 201, in evaluate
+    path = planner.plan(start, end)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/clip_sdf.py", line 208, in plan
+    return self.a_star_planner.plan(start_xy, end_xy)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/common.py", line 189, in plan
+    raise ValueError("No path found")
+ValueError: No path found
+ [1;31mERROR[0m   [1;90m2023-03-01 13:26:30[0m [__main__] Exception while getting path
+Traceback (most recent call last):
+  File "/private/home/bbolte/Github/usa/ml/evaluation/evaluations/path_length.py", line 201, in evaluate
+    path = planner.plan(start, end)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/clip_sdf.py", line 208, in plan
+    return self.a_star_planner.plan(start_xy, end_xy)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/common.py", line 189, in plan
+    raise ValueError("No path found")
+ValueError: No path found
+ [1;31mERROR[0m   [1;90m2023-03-01 13:26:30[0m [__main__] Exception while getting path
+Traceback (most recent call last):
+  File "/private/home/bbolte/Github/usa/ml/evaluation/evaluations/path_length.py", line 201, in evaluate
+    path = planner.plan(start, end)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/clip_sdf.py", line 208, in plan
+    return self.a_star_planner.plan(start_xy, end_xy)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/common.py", line 189, in plan
+    raise ValueError("No path found")
+ValueError: No path found
+ [1;31mERROR[0m   [1;90m2023-03-01 13:26:30[0m [__main__] Exception while getting path
+Traceback (most recent call last):
+  File "/private/home/bbolte/Github/usa/ml/evaluation/evaluations/path_length.py", line 201, in evaluate
+    path = planner.plan(start, end)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/clip_sdf.py", line 208, in plan
+    return self.a_star_planner.plan(start_xy, end_xy)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/common.py", line 189, in plan
+    raise ValueError("No path found")
+ValueError: No path found
+ [1;31mERROR[0m   [1;90m2023-03-01 13:26:30[0m [__main__] Exception while getting path
+Traceback (most recent call last):
+  File "/private/home/bbolte/Github/usa/ml/evaluation/evaluations/path_length.py", line 201, in evaluate
+    path = planner.plan(start, end)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/clip_sdf.py", line 208, in plan
+    return self.a_star_planner.plan(start_xy, end_xy)
+  File "/private/home/bbolte/Github/usa/ml/evaluation/planners/common.py", line 189, in plan
+    raise ValueError("No path found")
+ValueError: No path found
+  [1;36mINFO[0m   [1;90m2023-03-01 13:26:31[0m [__main__] Evaluating gradient_clip_sdf
+planner
+a_star_10_cm_clip_sdf    1.035
+a_star_10_cm_occ_map     1.003
+a_star_20_cm_clip_sdf    1.075
+a_star_30_cm_clip_sdf    1.157
+a_star_40_cm_clip_sdf    1.127
+gradient_clip_sdf        1.000
+Name: rel_path_length, dtype: float64
+  [1;36mINFO[0m   [1;90m2023-03-01 13:31:51[0m [__main__] Finished evaluating studio_r3d. Wrote logs to /private/home/bbolte/Experiments/Evaluation/today/language-navigation/eval-20230301-132436/studio_r3d/path_lengths

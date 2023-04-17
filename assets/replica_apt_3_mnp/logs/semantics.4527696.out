@@ -1,0 +1,19 @@
+[1;35mINFOALL[0m  [1;90m2023-03-01 13:25:22[0m [ml.trainers.mixins.device.auto] Device: [cuda:0]
+[1;33mWARNING[0m  [1;90m2023-03-01 13:25:28[0m [ml.utils.timer] Finished loading pretrained CLIP model in 6.48 seconds
+  [1;36mINFO[0m   [1;90m2023-03-01 13:25:32[0m [ml.trainers.mixins.device.gpu] Using FP64
+  [1;36mINFO[0m   [1;90m2023-03-01 13:39:08[0m [__main__] Evaluating replica_apt_3_mnp on 4 paths
+  [1;36mINFO[0m   [1;90m2023-03-01 13:44:02[0m [__main__] Point cloud path: /private/home/bbolte/Experiments/Evaluation/today/language-navigation/eval-20230301-132436/replica_apt_3_mnp/point_cloud.ply
+  [1;36mINFO[0m   [1;90m2023-03-01 13:45:53[0m [__main__] Video path: /private/home/bbolte/Experiments/Evaluation/today/language-navigation/eval-20230301-132436/replica_apt_3_mnp/video.mp4
+  [1;36mINFO[0m   [1;90m2023-03-01 13:46:27[0m [__main__] Path point cloud path: /private/home/bbolte/Experiments/Evaluation/today/language-navigation/eval-20230301-132436/replica_apt_3_mnp/path_point_cloud.ply
+  [1;36mINFO[0m   [1;90m2023-03-01 13:46:27[0m [__main__] Evaluating a_star_10_cm_clip_sdf
+  [1;36mINFO[0m   [1;90m2023-03-01 13:46:29[0m [__main__] Evaluating a_star_20_cm_clip_sdf
+  [1;36mINFO[0m   [1;90m2023-03-01 13:46:31[0m [__main__] Evaluating a_star_30_cm_clip_sdf
+  [1;36mINFO[0m   [1;90m2023-03-01 13:46:33[0m [__main__] Evaluating a_star_40_cm_clip_sdf
+  [1;36mINFO[0m   [1;90m2023-03-01 13:46:35[0m [__main__] Evaluating gradient_clip_sdf
+planner
+a_star_10_cm_clip_sdf    0.974
+a_star_20_cm_clip_sdf    0.913
+a_star_30_cm_clip_sdf    0.606
+a_star_40_cm_clip_sdf    0.523
+gradient_clip_sdf        1.000
+Name: rel_score, dtype: float64

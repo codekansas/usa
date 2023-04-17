@@ -1,0 +1,12 @@
+# .gitignore
+
+# Misc data files
+*.csv
+# *.ply
+*.pcd
+
+# *.png
+*/path_length/*/all.png
+*/maps/*.png
+*/semantics/*/*.png
+*/path_length/path_lengths.png

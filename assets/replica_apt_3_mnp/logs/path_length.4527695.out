@@ -1,0 +1,25 @@
+[1;35mINFOALL[0m  [1;90m2023-03-01 13:25:23[0m [ml.trainers.mixins.device.auto] Device: [cuda:0]
+[1;33mWARNING[0m  [1;90m2023-03-01 13:25:28[0m [ml.utils.timer] Finished loading pretrained CLIP model in 4.59 seconds
+  [1;36mINFO[0m   [1;90m2023-03-01 13:25:32[0m [ml.trainers.mixins.device.gpu] Using FP64
+  [1;36mINFO[0m   [1;90m2023-03-01 13:40:32[0m [__main__] Plotted map for a_star_10_cm_clip_sdf
+  [1;36mINFO[0m   [1;90m2023-03-01 13:40:33[0m [__main__] Plotted map for a_star_20_cm_clip_sdf
+  [1;36mINFO[0m   [1;90m2023-03-01 13:40:33[0m [__main__] Plotted map for a_star_30_cm_clip_sdf
+  [1;36mINFO[0m   [1;90m2023-03-01 13:40:33[0m [__main__] Plotted map for a_star_40_cm_clip_sdf
+  [1;36mINFO[0m   [1;90m2023-03-01 13:40:46[0m [__main__] Plotted map for gradient_clip_sdf
+  [1;36mINFO[0m   [1;90m2023-03-01 13:40:46[0m [__main__] Plotted map for a_star_10_cm_occ_map
+  [1;36mINFO[0m   [1;90m2023-03-01 13:40:47[0m [__main__] Evaluating replica_apt_3_mnp on 90 paths
+  [1;36mINFO[0m   [1;90m2023-03-01 13:40:47[0m [__main__] Evaluating a_star_10_cm_clip_sdf
+  [1;36mINFO[0m   [1;90m2023-03-01 13:40:51[0m [__main__] Evaluating a_star_10_cm_occ_map
+  [1;36mINFO[0m   [1;90m2023-03-01 13:40:54[0m [__main__] Evaluating a_star_20_cm_clip_sdf
+  [1;36mINFO[0m   [1;90m2023-03-01 13:40:58[0m [__main__] Evaluating a_star_30_cm_clip_sdf
+  [1;36mINFO[0m   [1;90m2023-03-01 13:41:02[0m [__main__] Evaluating a_star_40_cm_clip_sdf
+  [1;36mINFO[0m   [1;90m2023-03-01 13:41:05[0m [__main__] Evaluating gradient_clip_sdf
+planner
+a_star_10_cm_clip_sdf    1.006
+a_star_10_cm_occ_map     1.048
+a_star_20_cm_clip_sdf    1.013
+a_star_30_cm_clip_sdf    1.022
+a_star_40_cm_clip_sdf    1.024
+gradient_clip_sdf        1.000
+Name: rel_path_length, dtype: float64
+  [1;36mINFO[0m   [1;90m2023-03-01 13:42:59[0m [__main__] Finished evaluating replica_apt_3_mnp. Wrote logs to /private/home/bbolte/Experiments/Evaluation/today/language-navigation/eval-20230301-132436/replica_apt_3_mnp/path_lengths
