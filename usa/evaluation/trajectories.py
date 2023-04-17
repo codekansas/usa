@@ -4,11 +4,9 @@ import os
 from pathlib import Path
 from typing import Literal, Type, cast, get_args
 
+import ml.api as ml
 import numpy as np
 import open3d as o3d
-from ml.trainers.mixins.device.auto import AutoDevice
-from ml.trainers.mixins.device.base import BaseDevice
-from ml.utils.logging import configure_logging
 from torch.utils.data.dataset import Dataset
 
 from usa.evaluation.utils import load_clip_sdf_model_from_ckpt_and_config, plot_paths
@@ -181,7 +179,7 @@ def main() -> None:
     script.
     """
 
-    configure_logging(use_tqdm=True)
+    ml.configure_logging(use_tqdm=True)
 
     parser = argparse.ArgumentParser(description="Get trajectories for a trained model.")
     parser.add_argument(
@@ -240,7 +238,7 @@ def main() -> None:
 
     # Gets the device (GPU, CPU, Metal...)
     os.environ["USE_FP64"] = "1"
-    device = AutoDevice.detect_device()
+    device = ml.AutoDevice.detect_device()
 
     # Loads the model from the model root.
     ckpt_path, config_path = Path(args.ckpt_path), Path(args.config_path)

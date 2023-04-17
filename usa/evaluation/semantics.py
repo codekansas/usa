@@ -6,12 +6,11 @@ import os
 from pathlib import Path
 from typing import Iterator
 
+import ml.api as ml
 import numpy as np
 import open3d as o3d
 import pandas as pd
 import torch
-from ml.utils.logging import configure_logging
-from ml.utils.random import set_random_seed
 
 from usa.evaluation.utils import EvalSet, get_planners, plot_paths
 from usa.planners.clip_sdf import ClipSdfPlanner
@@ -45,7 +44,7 @@ def get_eval_set(
     """
 
     # Seed everything for reproducibility.
-    set_random_seed(1337)
+    ml.set_random_seed(1337)
 
     planners, dataset, poses = get_planners(name, False)
 
@@ -250,7 +249,7 @@ def main() -> None:
         KeyError: If the evaluation set is not found.
     """
 
-    configure_logging(use_tqdm=True)
+    ml.configure_logging(use_tqdm=True)
 
     parser = argparse.ArgumentParser(description="Runs semantic evaluation.")
     parser.add_argument("key", help="The evaluation key to use")
