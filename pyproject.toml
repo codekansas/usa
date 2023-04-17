@@ -49,7 +49,6 @@ module = [
     "PIL.*",
     "pytest.*",
     "quaternion.*",
-    "scipy.*",
     "seaborn.*",
     "torchvision.*",
     "tqdm.*",
