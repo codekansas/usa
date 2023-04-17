@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 import ml.api as ml
 import numpy as np
 import torch
-from ml.trainers.mixins.device.base import BaseDevice
 from omegaconf import OmegaConf
 from torch.utils.data.dataset import Dataset
 
@@ -43,7 +42,7 @@ def get_eval_root_dir() -> Path:
 def load_clip_sdf_model_from_ckpt_and_config(
     ckpt_path: Path,
     config_path: Path,
-    device: Type[BaseDevice],
+    device: Type[ml.BaseDevice],
 ) -> tuple[Point2EmbModel, ClipSdfTask]:
     """Loads the CLIP SDF model from the experiment path.
 
@@ -72,7 +71,7 @@ def load_clip_sdf_model_from_ckpt_and_config(
     return model, task
 
 
-def load_clip_sdf_model(exp_path: Path, device: Type[BaseDevice]) -> tuple[Point2EmbModel, ClipSdfTask]:
+def load_clip_sdf_model(exp_path: Path, device: Type[ml.BaseDevice]) -> tuple[Point2EmbModel, ClipSdfTask]:
     """Loads the CLIP SDF model from the experiment path.
 
     Args:

@@ -3,10 +3,10 @@ import logging
 from pathlib import Path
 from typing import Type, cast
 
+import ml.api as ml
 import numpy as np
 import torch
 import tqdm
-from ml.trainers.mixins.device.base import BaseDevice
 from torch import Tensor
 from torch.utils.data.dataset import Dataset
 
@@ -25,7 +25,7 @@ class ClipSdfPlanner(Planner):
         dataset: Dataset[PosedRGBDItem],
         model: Point2EmbModel,
         task: ClipSdfTask,
-        device: Type[BaseDevice],
+        device: Type[ml.BaseDevice],
         resolution: float,
         occ_avoid_radius: float = 0.3,
         floor_height: float = 0.1,
@@ -166,7 +166,7 @@ class AStarPlanner(ClipSdfPlanner):
         dataset: Dataset[PosedRGBDItem],
         model: Point2EmbModel,
         task: ClipSdfTask,
-        device: Type[BaseDevice],
+        device: Type[ml.BaseDevice],
         heuristic: Heuristic,
         resolution: float,
         cache_dir: Path | None = None,
@@ -265,7 +265,7 @@ class GradientPlanner(ClipSdfPlanner):
         dataset: Dataset[PosedRGBDItem],
         model: Point2EmbModel,
         task: ClipSdfTask,
-        device: Type[BaseDevice],
+        device: Type[ml.BaseDevice],
         lr: float = 1e-2,
         dist_loss_weight: float = 1.0,
         spacing_loss_weight: float = 1.0,

@@ -1,3 +1,7 @@
 # .gitignore
 
 .ipynb_checkpoints/
+
+data/
+runs/
+evals/

@@ -16,7 +16,7 @@ from usa.tasks.datasets.home_robot import (
     HomeRobotDataset,
     chris_lab_home_robot_dataset,
 )
-from usa.tasks.datasets.r3d import LabR3DDataset, StudioR3DDataset
+from usa.tasks.datasets.r3d import LabR3DDataset, R3DDataset, StudioR3DDataset
 from usa.tasks.datasets.replica_cad import ReplicaCADDataset
 from usa.tasks.datasets.stretch import (
     chess_stretch_dataset,
@@ -40,6 +40,11 @@ def get_posed_rgbd_dataset(
             path = os.environ.get("HOME_ROBOT_DS_PATH")
         assert path is not None, "Path must be specified for `home_robot` dataset; set `HOME_ROBOT_DS_PATH` env var"
         return HomeRobotDataset(path)
+    if key == "r3d":
+        if path is None:
+            path = os.environ.get("R3D_DS_PATH")
+        assert path is not None, "Path must be specified for `r3d` dataset; set `R3D_DS_PATH` env var"
+        return R3DDataset(path, img_dim=img_dim, random_crop=random_crop)
     if key == "chris_lab":
         return chris_lab_home_robot_dataset()
     if key == "lab_r3d":
