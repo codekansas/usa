@@ -16,6 +16,6 @@ pybullet
 pyliblzfse
 scipy
 seaborn
-sklearn
+scikit-learn
 torch>=2.0.0
 torchvision>=0.13.1
