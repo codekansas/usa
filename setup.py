@@ -14,6 +14,10 @@ with open("requirements-dev.txt", "r", encoding="utf-8") as f:
     requirements_dev: list[str] = f.read().splitlines()
 
 
+with open("requirements-ipynb.txt", "r", encoding="utf-8") as f:
+    requirements_ipynb: list[str] = f.read().splitlines()
+
+
 with open("usa/__version__.txt", "r", encoding="utf-8") as f:
     version: str = f.read().strip()
 
@@ -29,5 +33,8 @@ setup(
     python_requires=">=3.10",
     install_requires=requirements,
     tests_require=requirements_dev,
-    extras_require={"dev": requirements_dev},
+    extras_require={
+        "dev": requirements_dev,  # Testing, linting, etc.
+        "ipynb": requirements_ipynb,  # Jupyter notebook
+    },
 )
