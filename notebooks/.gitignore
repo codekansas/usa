@@ -9,3 +9,6 @@ evals/
 *.gif
 *.mp4
 *.m4v
+*.zip
+
+04_pybullet_data/
