@@ -5,3 +5,7 @@
 data/
 runs/
 evals/
+
+*.gif
+*.mp4
+*.m4v
