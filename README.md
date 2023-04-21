@@ -23,6 +23,12 @@ git clone git@github.com:codekansas/usa.git
 cd usa && pip install -e .
 ```
 
+There are some extra dependencies for the notebooks which can be installed with:
+
+```bash
+pip install 'usa-net[ipynb]'
+```
+
 See the [notebooks](/notebooks) for examples.
 
 ### Requirements
