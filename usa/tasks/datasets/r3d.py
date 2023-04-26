@@ -41,7 +41,7 @@ def as_pose_matrix(pose: list[float]) -> np.ndarray:
     """Converts a list of pose parameters to a pose matrix.
 
     Args:
-        pose: The list of pose parametres, (qx, qy, qz, qw, px, py, pz)
+        pose: The list of pose parameters, (qx, qy, qz, qw, px, py, pz)
 
     Returns:
         A (4, 4) pose matrix
