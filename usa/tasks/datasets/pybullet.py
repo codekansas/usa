@@ -71,7 +71,7 @@ class PyBulletDataset(Dataset[PosedRGBDItem]):
         item = PosedRGBDItem(
             image=image,
             depth=depth_fp,
-            mask=torch.from_numpy(self.masks[index]),
+            mask=torch.from_numpy(self.masks[index])[None],
             intrinsics=torch.from_numpy(intr),
             pose=torch.from_numpy(pose),
         )
