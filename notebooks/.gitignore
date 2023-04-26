@@ -11,5 +11,6 @@ evals/
 *.mp4
 *.m4v
 *.zip
+*.pkl
 
 04_pybullet_data/

@@ -1,6 +1,12 @@
+<div align="center">
+
 # USA Net
 
-USA net project code.
+</div>
+
+<br />
+
+A robust method for mapping an environment and doing language-based planning.
 
 ## Getting Started
 
