@@ -2,11 +2,11 @@
 
 # USA Net
 
+A robust method for mapping an environment and doing language-based planning.
+
 </div>
 
 <br />
-
-A robust method for mapping an environment and doing language-based planning.
 
 ## Getting Started
 
