@@ -49,4 +49,5 @@ trainer:
 
 logger:
   - name: stdout
+    write_train_every_n_seconds: 60
   - name: tensorboard
