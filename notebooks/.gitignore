@@ -6,6 +6,7 @@ models/
 data/
 runs/
 evals/
+cache/
 
 *.gif
 *.mp4

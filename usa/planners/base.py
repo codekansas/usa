@@ -90,20 +90,27 @@ def get_occupancy_map_from_dataset(
                 ys = ((xy[:, 1] - origin[1]) / resolution).floor().long()
 
                 if counts is None:
-                    counts = xy.new_zeros((ybins, xbins), dtype=torch.long).flatten()
+                    counts = xy.new_zeros((ybins, xbins), dtype=torch.int32).flatten()
                 if any_counts is None:
-                    any_counts = xy.new_zeros((ybins, xbins), dtype=torch.bool).flatten()
+                    any_counts = xy.new_zeros((ybins, xbins), dtype=torch.int32).flatten()
 
                 # Counts the number of occupying points in each cell.
                 occ_xys = (xyz[:, 2] >= min_height) & (xyz[:, 2] <= max_height)
 
                 if len(occ_xys) != 0:
                     occ_inds = ys[occ_xys] * xbins + xs[occ_xys]
-                    counts.index_add_(0, occ_inds, torch.ones_like(xs[occ_xys], dtype=torch.long))
+                    counts.index_add_(0, occ_inds, torch.ones_like(xs[occ_xys], dtype=torch.int32))
 
                 # Keeps track of the cells that have any points from anywhere.
                 inds = ys * xbins + xs
-                any_counts.index_fill_(0, inds, True)
+
+                # Does the operation on CPU if the tensor is an MPS tensor.
+                # This is slower but necessary because MPS doesn't support
+                # `index_fill_` for some versions.
+                if any_counts.device.type == "mps":
+                    any_counts.copy_(any_counts.cpu().index_fill_(0, inds.cpu(), True).to(any_counts))
+                else:
+                    any_counts.index_fill_(0, inds, True)
 
             assert counts is not None and any_counts is not None, "No points in the dataset"
             counts = counts.reshape((ybins, xbins))

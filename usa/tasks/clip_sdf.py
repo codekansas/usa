@@ -22,19 +22,13 @@ from usa.models.point2emb import Point2EmbModel
 from usa.tasks.datasets.posed_rgbd import Bounds, get_posed_rgbd_dataset
 from usa.tasks.datasets.types import PosedRGBDItem
 from usa.tasks.datasets.utils import (
+    aminmax,
     get_nearest_xyz,
     get_xy_pixel_from_xyz,
     get_xyz_coordinates,
 )
 
 logger = logging.getLogger(__name__)
-
-
-def aminmax(x: Tensor) -> tuple[Tensor, Tensor]:
-    if x.device.type == "mps":
-        return x.min(), x.max()
-    xmin, xmax = torch.aminmax(x)
-    return xmin, xmax
 
 
 def clip_sim(a: Tensor, b: Tensor) -> Tensor:
