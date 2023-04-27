@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+import re
+
 from setuptools import setup
 
 with open("README.md", "r", encoding="utf-8") as f:
@@ -18,8 +20,10 @@ with open("requirements-ipynb.txt", "r", encoding="utf-8") as f:
     requirements_ipynb: list[str] = f.read().splitlines()
 
 
-with open("usa/__version__.txt", "r", encoding="utf-8") as f:
-    version: str = f.read().strip()
+with open("ml/__init__.py", "r", encoding="utf-8") as fh:
+    version_re = re.search(r"^__version__ = \"([^\"]*)\"", fh.read(), re.MULTILINE)
+assert version_re is not None, "Could not find version in ml/__init__.py"
+version: str = version_re.group(1)
 
 
 setup(
