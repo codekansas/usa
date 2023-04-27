@@ -25,6 +25,7 @@ from usa.tasks.datasets.stretch import (
     lab_stretch_dataset,
 )
 from usa.tasks.datasets.types import PosedRGBDItem
+from usa.tasks.datasets.utils import aminmax
 
 logger = logging.getLogger(__name__)
 
@@ -119,9 +120,6 @@ class Bounds:
     @classmethod
     def from_xyz(cls, xyz: Tensor) -> Tensor:
         assert xyz.shape[-1] == 3
-
-        # Supports MPS tensors.
-        aminmax = lambda x: (x.min(), x.max()) if x.device.type == "mps" else tuple(torch.aminmax(x))
 
         xmin, xmax = aminmax(xyz[..., 0])
         ymin, ymax = aminmax(xyz[..., 1])
@@ -249,7 +247,7 @@ def get_bounds(ds: Dataset[PosedRGBDItem], cache_dir: Path | None = None) -> Bou
     else:
         for xyz, mask in iter_xyz(ds, "Bounds"):
             xyz_flat = xyz[~mask]
-            minv_torch, maxv_torch = xyz_flat.aminmax(dim=0)
+            minv_torch, maxv_torch = aminmax(xyz_flat, dim=0)
             minv, maxv = minv_torch.cpu().numpy(), maxv_torch.cpu().numpy()
             if bounds is None:
                 bounds = np.stack((minv, maxv), axis=1)
