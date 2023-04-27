@@ -25,7 +25,7 @@ from usa.tasks.datasets.stretch import (
     lab_stretch_dataset,
 )
 from usa.tasks.datasets.types import PosedRGBDItem
-from usa.tasks.datasets.utils import aminmax
+from usa.tasks.datasets.utils import aminmax, get_inv_intrinsics
 
 logger = logging.getLogger(__name__)
 
@@ -153,7 +153,8 @@ def get_xyz(depth: Tensor, mask: Tensor, pose: Tensor, intrinsics: Tensor) -> Te
     xyz = torch.cat((xy, torch.ones_like(xy[..., :1])), dim=-1)
 
     # Applies intrinsics and extrinsics.
-    xyz = xyz @ intrinsics.inverse().transpose(-1, -2)
+    # xyz = xyz @ intrinsics.inverse().transpose(-1, -2)
+    xyz = xyz @ get_inv_intrinsics(intrinsics).transpose(-1, -2)
     xyz = xyz * depth.flatten(1).unsqueeze(-1)
     xyz = (xyz[..., None, :] * pose[..., None, :3, :3]).sum(dim=-1) + pose[..., None, :3, 3]
 
