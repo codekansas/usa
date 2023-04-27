@@ -1,4 +1,4 @@
 """Defines handlers for the pretrained Segment Anything model.
 
-Most of this file is taken from here
+Reference: https://github.com/facebookresearch/segment-anything
 """
