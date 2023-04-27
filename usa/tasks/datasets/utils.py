@@ -21,6 +21,8 @@ logger = logging.getLogger(__name__)
 
 def aminmax(x: Tensor, dim: int | None = None) -> tuple[Tensor, Tensor]:
     if x.device.type == "mps":
+        if dim is None:
+            return x.min(), x.max()
         return x.min(dim=dim)[0], x.max(dim=dim)[0]
     xmin, xmax = torch.aminmax(x, dim=dim)
     return xmin, xmax
