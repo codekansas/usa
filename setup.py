@@ -20,7 +20,7 @@ with open("requirements-ipynb.txt", "r", encoding="utf-8") as f:
     requirements_ipynb: list[str] = f.read().splitlines()
 
 
-with open("ml/__init__.py", "r", encoding="utf-8") as fh:
+with open("usa/__init__.py", "r", encoding="utf-8") as fh:
     version_re = re.search(r"^__version__ = \"([^\"]*)\"", fh.read(), re.MULTILINE)
 assert version_re is not None, "Could not find version in ml/__init__.py"
 version: str = version_re.group(1)
