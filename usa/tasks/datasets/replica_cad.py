@@ -144,4 +144,5 @@ class ReplicaCADDataset(Dataset[PosedRGBDItem]):
 
 if __name__ == "__main__":
     # python -m usa.tasks.datasets.impl.replica_cad
+    ml.configure_logging()
     visualize_posed_rgbd_dataset(ReplicaCADDataset("apt_3_mnp"), max_point_cloud_samples=10)
