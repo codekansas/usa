@@ -7,6 +7,7 @@ data/
 runs/
 evals/
 cache/
+out/
 
 *.gif
 *.mp4

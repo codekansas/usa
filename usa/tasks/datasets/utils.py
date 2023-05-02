@@ -234,7 +234,7 @@ def make_video_from_dataset(
             if max_samples is not None and i >= max_samples:
                 break
 
-    ml.WRITERS["ffmpeg"](iter_frames(), save_path)
+    ml.write_video(iter_frames(), save_path)
 
 
 def make_point_cloud_from_dataset(
@@ -354,9 +354,6 @@ def visualize_posed_rgbd_dataset(
 
     # Disabling Metal because it doesn't support fp64.
     os.environ["DISABLE_METAL"] = "1"
-
-    ml.Debugging.set(True)  # Always log debug information here.
-    ml.configure_logging()
 
     # Gets the output directory.
     (output_dir_path := Path(output_dir)).mkdir(exist_ok=True, parents=True)

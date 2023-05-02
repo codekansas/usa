@@ -207,6 +207,7 @@ def chess_stretch_dataset() -> StretchDataset:
 
 if __name__ == "__main__":
     # python -m usa.tasks.datasets.impl.stretch
+    ml.configure_logging()
     visualize_posed_rgbd_dataset(
         lab_stretch_dataset(),
         make_video=False,
