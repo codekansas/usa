@@ -234,7 +234,7 @@ def make_video_from_dataset(
             if max_samples is not None and i >= max_samples:
                 break
 
-    ml.write_video("ffmpeg", iter_frames(), save_path)
+    ml.write_video(iter_frames(), save_path)
 
 
 def make_point_cloud_from_dataset(
