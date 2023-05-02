@@ -8,6 +8,7 @@ runs/
 evals/
 cache/
 out/
+core
 
 *.gif
 *.mp4
@@ -15,4 +16,4 @@ out/
 *.zip
 *.pkl
 
-04_pybullet_data/
+test_dataset.py
