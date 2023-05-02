@@ -110,6 +110,7 @@ def get_occupancy_map_from_dataset(
                 if any_counts.device.type == "mps":
                     any_counts.copy_(any_counts.cpu().index_fill_(0, inds.cpu(), True).to(any_counts))
                 else:
+                    inds.clamp_(min=0, max=any_counts.numel() - 1)
                     any_counts.index_fill_(0, inds, True)
 
             assert counts is not None and any_counts is not None, "No points in the dataset"

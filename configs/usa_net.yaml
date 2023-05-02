@@ -12,6 +12,7 @@ task:
   # dataset: replica_apt_3_mnp
   # dataset: lab_r3d
   # dataset: studio_r3d
+  # dataset: pybullet
   clip_model: ViT_B_16
   queries:
     - Chair
