@@ -1,5 +1,10 @@
 # requirements-nb.txt
 
+ipygany
+ipywidgets
 pybullet
+pythreejs
+pyvista
 scikit-learn
 scipy
+trame

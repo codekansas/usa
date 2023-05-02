@@ -110,6 +110,7 @@ def chris_lab_home_robot_dataset() -> HomeRobotDataset:
 
 if __name__ == "__main__":
     # python -m usa.tasks.datasets.impl.home_robot
+    ml.configure_logging()
     visualize_posed_rgbd_dataset(
         chris_lab_home_robot_dataset(),
         make_video=True,

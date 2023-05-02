@@ -284,6 +284,7 @@ class StudioR3DDataset(R3DDataset):
 
 if __name__ == "__main__":
     # python -m ml.tasks.datasets.impl.r3d
+    ml.configure_logging()
     visualize_posed_rgbd_dataset(
         StudioR3DDataset(),
         make_video=True,
