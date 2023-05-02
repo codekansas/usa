@@ -8,11 +8,10 @@ runs/
 evals/
 cache/
 out/
+core
 
 *.gif
 *.mp4
 *.m4v
 *.zip
 *.pkl
-
-04_pybullet_data/

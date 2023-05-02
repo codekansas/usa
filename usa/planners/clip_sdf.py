@@ -379,8 +379,8 @@ class GradientPlanner(ClipSdfPlanner):
         # Optimization loop, just using gradient descent.
         prev_xys: Tensor | None = None
 
-        opt = torch.optim.Adam([xys], lr=self.lr)
-        # opt = torch.optim.SGD([xys], lr=self.lr, momentum=0.9)
+        # opt = torch.optim.Adam([xys], lr=self.lr)
+        opt = torch.optim.SGD([xys], lr=self.lr, momentum=0.9)
 
         for _ in tqdm.trange(self.num_optimization_steps):
             opt.zero_grad()

@@ -41,3 +41,11 @@ See the [notebooks](/notebooks) for examples.
 
 - Python 3.10+
 - PyTorch 2.0+
+
+### Development
+
+Add pre-commit hooks to clean Jupyter notebooks:
+
+```bash
+pre-commit install
+```
