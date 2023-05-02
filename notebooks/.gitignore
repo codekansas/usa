@@ -15,5 +15,3 @@ core
 *.m4v
 *.zip
 *.pkl
-
-test_dataset.py
