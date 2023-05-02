@@ -38,9 +38,7 @@ lr_scheduler:
   name: linear
 
 trainer:
-  name: slurm_sl
-  num_nodes: 1
-  gpus_per_node: 1
+  name: sl
   checkpoint:
     save_every_n_steps: 2500
     only_save_most_recent: true
@@ -51,3 +49,8 @@ trainer:
 logger:
   - name: stdout
   - name: tensorboard
+
+launcher:
+  name: slurm
+  num_nodes: 1
+  gpus_per_node: 1
