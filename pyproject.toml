@@ -40,8 +40,12 @@ disable_error_code = ["attr-defined"]
 module = [
     "cv2.*",
     "ffmpeg.*",
+    "liblzfse.*",
     "matplotlib.*",
+    "open3d.*",
     "pybullet.*",
+    "quaternion.*",
+    "seaborn.*",
     "torchvision.*",
 ]
 
