@@ -17,10 +17,10 @@ from typing import Any, Literal, cast, get_args, overload
 import ftfy
 import ml.api as ml
 import numpy as np
+import PIL.Image
 import torch
 import torch.nn.functional as F
 import torchvision
-from PIL import Image as PILImage
 from pkg_resources import packaging
 from torch import Tensor, nn
 from torchvision.datasets.utils import download_url
@@ -61,7 +61,7 @@ PRETRAINED_MODELS: dict[PretrainedModel, str] = {
 CLIP_VOCABULARY = "https://github.com/openai/CLIP/raw/main/clip/bpe_simple_vocab_16e6.txt.gz"
 
 
-def _convert_image_to_rgb(image: PILImage) -> PILImage:
+def _convert_image_to_rgb(image: PIL.Image.Image) -> PIL.Image.Image:
     return image.convert("RGB")
 
 
@@ -983,7 +983,7 @@ def test_pretrained_model(model_key: PretrainedModel) -> None:
     if not url_path.exists():
         download_url(peach_url, "/tmp", filename="peach.jpg")
 
-    peach_img = PILImage.open(url_path)
+    peach_img = PIL.Image.open(url_path)
     pos_desc = "A picture of an Autumn Red peach"
     neg_desc = "An Instagram photo of a cute puppy"
 
