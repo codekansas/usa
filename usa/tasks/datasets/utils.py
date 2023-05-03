@@ -3,7 +3,7 @@ import logging
 import os
 import time
 from pathlib import Path
-from typing import Iterator
+from typing import Iterator, Sized, cast
 
 import ml.api as ml
 import numpy as np
@@ -204,7 +204,8 @@ def make_video_from_dataset(
 
     def iter_frames() -> Iterator[np.ndarray]:
         i = 0
-        for item in tqdm.tqdm(ds, desc="Processing video"):
+        for j in tqdm.trange(len(cast(Sized, ds)), desc="Processing video"):
+            item = ds[j]
             depth = (item.depth - item.depth.min()) / (item.depth.max() - item.depth.min())
             reg_depth = (255 * depth).to(torch.uint8)
             # inv_depth = (255 / (32 * depth + 1)).to(torch.uint8)
@@ -273,7 +274,10 @@ def make_point_cloud_from_dataset(
         collate_fn=ml.collate,
     )
 
-    pf = device.get_prefetcher(dl)
+    with ml.Timer("getting prefetcher"):
+        pf = device.get_prefetcher(dl)
+        pf_iter = iter(pf)
+
     total = (len(ds) + batch_size - 1) // batch_size  # type: ignore
 
     # Saves the complete point cloud.
@@ -282,7 +286,7 @@ def make_point_cloud_from_dataset(
     i, j = 0, 0
 
     with torch.inference_mode():
-        for item in tqdm.tqdm(pf, desc="Processing point cloud", total=total):
+        for item in tqdm.tqdm(pf_iter, desc="Processing point cloud", total=total):
             j += 1
             if j < stride:
                 continue

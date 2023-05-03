@@ -9,6 +9,7 @@ evals/
 cache/
 out/
 core
+04_pybullet_data/
 
 *.gif
 *.mp4

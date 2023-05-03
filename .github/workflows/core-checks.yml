@@ -34,7 +34,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ${{ env.pythonLocation }}
-          key: ${{ env.pythonLocation }}-${{ hashFiles('setup.py', 'requirements.txt', 'requirements-dev.txt') }}
+          key: ${{ env.pythonLocation }}-${{ hashFiles('setup.py', 'pyproject.toml', 'requirements.txt', 'requirements-dev.txt') }}
 
       - name: Install package
         run: |

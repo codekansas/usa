@@ -143,7 +143,7 @@ def main() -> None:
 
     # Gets the dataset.
     floor_ceil_heights = float(args.floor_height), float(args.ceil_height)
-    dataset = cast(Dataset[PosedRGBDItem], task.get_dataset("train"))
+    dataset = task.get_dataset("train")
 
     # Gets the resolution, goal locations and artifacts directory from arguments.
     resolution = float(args.resolution)

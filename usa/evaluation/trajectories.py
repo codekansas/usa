@@ -34,7 +34,7 @@ def get_planner(
     dataset: Dataset[PosedRGBDItem] | None = None,
 ) -> Planner:
     if dataset is None:
-        dataset = cast(Dataset[PosedRGBDItem], task.get_dataset("train"))
+        dataset = task.get_dataset("train")
     floor_height, ceil_height = floor_ceil_heights
 
     if planner_key == "a_star":
@@ -246,7 +246,7 @@ def main() -> None:
 
     # Gets the dataset and planner from the given model.
     floor_ceil_heights = float(args.floor_height), float(args.ceil_height)
-    dataset = cast(Dataset[PosedRGBDItem], task.get_dataset("train"))
+    dataset = task.get_dataset("train")
     planner = get_planner(model, task, cast(PlannerType, args.planner), floor_ceil_heights, device, dataset)
 
     # Gets the starting XY coordinates, the goal locations and the artifacts directory from arguments.

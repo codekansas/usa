@@ -1,7 +1,7 @@
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Type, cast
+from typing import Type
 
 import matplotlib.pyplot as plt
 import ml.api as ml
@@ -143,7 +143,7 @@ def get_planners(
     device = ml.AutoDevice.detect_device()
 
     model, task = load_clip_sdf_model(clip_sdf_exp_path, device)
-    dataset = cast(Dataset[PosedRGBDItem], task.get_dataset("train"))
+    dataset = task.get_dataset("train")
 
     # Cache to the experiment directory.
     base_cache_dir = clip_sdf_exp_path / "eval_cache" / "semantics" / name
