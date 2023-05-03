@@ -2,7 +2,7 @@ import functools
 import itertools
 import logging
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import Any, Callable, Sized, cast
 
 import ml.api as ml
 import torch
@@ -318,9 +318,9 @@ def test_sdf_dataset(max_samples: int = 3) -> None:
     task = ClipSdfTask(config)
     ds = task.get_dataset("train")
 
-    for i, item in enumerate(itertools.islice(tqdm.tqdm(ds, total=max_samples, desc="Samples"), max_samples)):
+    for i in itertools.islice(tqdm.trange(len(cast(Sized, ds)), total=max_samples, desc="Samples"), max_samples):
         logger.info("Checking sample %d", i)
-        item.check()
+        ds[i].check()
 
 
 if __name__ == "__main__":

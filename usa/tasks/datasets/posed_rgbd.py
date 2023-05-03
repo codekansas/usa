@@ -2,7 +2,7 @@ import logging
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterator
+from typing import Iterator, Sized, cast
 
 import ml.api as ml
 import more_itertools
@@ -201,8 +201,8 @@ def get_poses(ds: Dataset[PosedRGBDItem], cache_dir: Path | None = None) -> np.n
         return np.load(cache_loc)
 
     all_poses: list[np.ndarray] = []
-    for item in tqdm.tqdm(ds, desc="Poses"):
-        all_poses.append(item.pose.cpu().numpy())
+    for i in tqdm.trange(len(cast(Sized, ds)), desc="Poses"):
+        all_poses.append(ds[i].pose.cpu().numpy())
 
     poses = np.stack(all_poses)
     if cache_loc is not None:
@@ -221,8 +221,8 @@ def get_pose_bounds(ds: Dataset[PosedRGBDItem], cache_dir: Path | None = None) -
     if cache_loc is not None and cache_loc.is_file():
         bounds = np.load(cache_loc)
     else:
-        for item in tqdm.tqdm(ds, desc="Pose bounds"):
-            xyz = item.pose[..., :3, 3].cpu().numpy()
+        for i in tqdm.trange(len(cast(Sized, ds)), desc="Pose bounds"):
+            xyz = ds[i].pose[..., :3, 3].cpu().numpy()
             if bounds is None:
                 bounds = np.stack((xyz, xyz), axis=1)
             else:
