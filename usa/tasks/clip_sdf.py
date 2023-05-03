@@ -298,7 +298,7 @@ class ClipSdfTask(ml.SupervisedLearningTask[ClipSdfTaskConfig, Model, Batch, Out
             # SDF image has shape (width, height)
             return clip_preds.permute(2, 0, 1), sdf_preds
 
-    def get_dataset(self, phase: ml.Phase) -> Dataset:
+    def get_dataset(self, phase: ml.Phase) -> Dataset[PosedRGBDItem]:
         return self._dataset
 
 
