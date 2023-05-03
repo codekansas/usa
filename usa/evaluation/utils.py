@@ -1,7 +1,7 @@
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Type, cast
+from typing import Type
 
 import matplotlib.pyplot as plt
 import ml.api as ml
