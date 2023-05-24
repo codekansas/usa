@@ -49,3 +49,12 @@ Add pre-commit hooks to clean Jupyter notebooks:
 ```bash
 pre-commit install
 ```
+
+### Notes
+
+- If you are having trouble installing Open3D on Mac, install Pybind through Conda instead:
+
+```bash
+pip uninstall open3d
+conda install open3d
+```
