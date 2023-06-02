@@ -5,7 +5,7 @@ ftfy
 imageio
 jupyter
 matplotlib
-ml-starter
+ml-starter==0.0.44
 more_itertools
 numpy
 numpy-quaternion
