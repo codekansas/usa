@@ -209,7 +209,6 @@ class AStarPlanner(ClipSdfPlanner):
         if end_goal is not None:
             assert end_xy is None, "Cannot specify both end_xy and end_goal"
             end_xy = self.get_end_xy(start_xy, end_goal)
-        
         return self.a_star_planner.plan(
             start_xy=start_xy,
             end_xy=end_xy,
@@ -341,7 +340,6 @@ class GradientPlanner(ClipSdfPlanner):
 
         # Gets a seed path from the base planner.
         seed_path = self.base_planner.plan(start_xy, end_xy, end_goal, remove_line_of_sight_points=False)
-        #print(seed_path)
         xys = self.device.tensor_to(torch.tensor(seed_path))
         xys.requires_grad_(True)
 
@@ -396,7 +394,6 @@ class GradientPlanner(ClipSdfPlanner):
         # Optimization loop, just using gradient descent.
         prev_xys: Tensor | None = None
 
-        #opt = torch.optim.Adam([xys], lr=self.lr)
         opt = torch.optim.SGD([xys], lr=self.lr, momentum=0.9)
 
         for _ in tqdm.trange(self.num_optimization_steps):
@@ -407,7 +404,6 @@ class GradientPlanner(ClipSdfPlanner):
 
             # First point doesn't change, last point only changes if we have
             # a goal embedding rather than XY coordinate.
-            #print(xys)
             xys_grad = cast(Tensor, xys.grad)
             xys_grad[:1].zero_()
             if target_emb is None:

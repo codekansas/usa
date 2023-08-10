@@ -27,6 +27,7 @@ from usa.tasks.datasets.utils import (
     get_xy_pixel_from_xyz,
     get_xyz_coordinates,
 )
+
 import wandb
 
 logger = logging.getLogger(__name__)
@@ -146,13 +147,10 @@ class ClipSdfTask(ml.SupervisedLearningTask[ClipSdfTaskConfig, Model, Batch, Out
         self.clip.linguistic.apply(fn)
         return super().apply(fn)
 
-<<<<<<< HEAD
     def _get_posed_rgb_dataset(self) -> Dataset[PosedRGBDItem]:
         return get_posed_rgbd_dataset(self.config.dataset, path=self.config.dataset_path)
 
     #@functools.cached_property
-=======
->>>>>>> eefccfe349c7c333ed8e6c7d4a13cdf2fb810532
     def _dataset(self) -> Dataset[PosedRGBDItem]:
         return get_posed_rgbd_dataset(self.config.dataset, path=self.config.dataset_path)
 
@@ -170,7 +168,8 @@ class ClipSdfTask(ml.SupervisedLearningTask[ClipSdfTaskConfig, Model, Batch, Out
     def run_model(self, model: Model, batch: Batch, state: ml.State) -> tuple[Tensor, Tensor]:
         _, depth, mask, intrinsics, pose = batch
         depth_frac = torch.rand_like(depth) * (1 - self.config.min_depth_prct) + self.config.min_depth_prct
-        # print(self.config.min_depth_prct)
+        # print(self.config.min_depth)
+
         # Sample XYZ points to run through the model.
         sample_mask = torch.rand_like(mask, dtype=depth.dtype)
         q = torch.quantile(
@@ -216,7 +215,6 @@ class ClipSdfTask(ml.SupervisedLearningTask[ClipSdfTaskConfig, Model, Batch, Out
             # Gets the batch ID of the nearest points.
             batch_inds = torch.arange(mask.shape[0], device=mask.device)
             #print("batch_size")
-            #print(mask.shape[0])
             batch_inds = batch_inds[:, None, None, None].expand_as(mask)[~mask][nearest_inds]
 
             # Gets the pixel closest to the nearest XYZ point.
@@ -254,9 +252,6 @@ class ClipSdfTask(ml.SupervisedLearningTask[ClipSdfTaskConfig, Model, Batch, Out
         # Adds the CLIP loss if there were any cropped images.
         if crop_result is not None and clip is not None:
             sims = clip_sim(clip_preds[crop_result[1]], clip)
-            #print("sims")
-            #print(sims.shape)
-            #print(sims)
             clip_loss = F.cross_entropy(sims, torch.arange(sims.shape[0], device=device), reduction="none")
 
             # Weight the CLIP loss by the softmax of the SDF.
@@ -285,6 +280,7 @@ class ClipSdfTask(ml.SupervisedLearningTask[ClipSdfTaskConfig, Model, Batch, Out
                 wandb.log({"sdf prediction": wandb.Image(
                             sdf_image)
                           }, step = state.num_steps)
+            # clip_image, sdf_image = self.get_clip_and_sdf_images(model, device, preds.dtype)
             # self.logger.log_image("sdf", sdf_image)
             self.logger.log_point_cloud("xyz", torch.stack([xyz, nearest_xyz.to(xyz)]))
             self.logger.log_point_cloud("surface", batch_xyz.to(xyz))

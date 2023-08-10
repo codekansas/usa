@@ -3,7 +3,10 @@ model:
   num_layers: 4
   hidden_dims: 256
   output_dims: 513  # CLIP dimensions = 512 + SDF = 1
+<<<<<<< HEAD
   #norm: layer
+=======
+>>>>>>> eefccfe349c7c333ed8e6c7d4a13cdf2fb810532
 
 task:
   name: clip_sdf
