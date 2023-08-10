@@ -27,6 +27,7 @@ from usa.tasks.datasets.utils import (
     get_xy_pixel_from_xyz,
     get_xyz_coordinates,
 )
+import wandb
 
 logger = logging.getLogger(__name__)
 
@@ -148,7 +149,7 @@ class ClipSdfTask(ml.SupervisedLearningTask[ClipSdfTaskConfig, Model, Batch, Out
     def _get_posed_rgb_dataset(self) -> Dataset[PosedRGBDItem]:
         return get_posed_rgbd_dataset(self.config.dataset, path=self.config.dataset_path)
 
-    @functools.cached_property
+    #@functools.cached_property
     def _dataset(self) -> Dataset[PosedRGBDItem]:
         return self._get_posed_rgb_dataset()
 
@@ -166,15 +167,22 @@ class ClipSdfTask(ml.SupervisedLearningTask[ClipSdfTaskConfig, Model, Batch, Out
     def run_model(self, model: Model, batch: Batch, state: ml.State) -> tuple[Tensor, Tensor]:
         _, depth, mask, intrinsics, pose = batch
         depth_frac = torch.rand_like(depth) * (1 - self.config.min_depth_prct) + self.config.min_depth_prct
-
+        # print(self.config.min_depth_prct)
         # Sample XYZ points to run through the model.
         sample_mask = torch.rand_like(mask, dtype=depth.dtype)
         q = torch.quantile(
             (sample_mask.cpu() if mask.device.type == "mps" else sample_mask).float(),
-            self.config.points_to_sample / sample_mask.numel(),
+            (mask.shape[0] * self.config.points_to_sample) / sample_mask.numel(),
         ).to(sample_mask)
+        #print(self.config.points_to_sample, sample_mask.numel(), self.config.points_to_sample / sample_mask.numel())
         mask = mask | (sample_mask > q)
+        #print(torch.where(mask)[0].shape, torch.where(~mask)[0].shape, mask.reshape(-1).shape)
+        #print(depth_frac, q)
+        #print(depth.shape, mask.shape)
         sampled_xyz = get_xyz_coordinates(depth_frac * depth, mask, pose, intrinsics).to(depth)
+        #print("sampled_xyz")
+        #print(sampled_xyz.shape)
+        #print(sampled_xyz)
 
         preds = model(sampled_xyz)
 
@@ -191,16 +199,32 @@ class ClipSdfTask(ml.SupervisedLearningTask[ClipSdfTaskConfig, Model, Batch, Out
         with torch.no_grad():
             # Gets the nearest neighbor to the sampled points.
             batch_xyz = get_xyz_coordinates(depth.to(pose), mask, pose, intrinsics)
+            #print("batch_xyz")
+            #print(batch_xyz.shape)
+            #print(batch_xyz)
             nearest_xyz, nearest_inds = get_nearest_xyz(batch_xyz, xyz.to(pose))
+            #print("nearest_xyz")
+            #print(nearest_xyz.shape)
+            #print(nearest_xyz)
+            #print("nearest_inds")
+            #print(nearest_inds.shape)
+            #print(nearest_inds)
 
             # Gets the batch ID of the nearest points.
             batch_inds = torch.arange(mask.shape[0], device=mask.device)
+            #print("batch_size")
+            #print(mask.shape[0])
             batch_inds = batch_inds[:, None, None, None].expand_as(mask)[~mask][nearest_inds]
 
             # Gets the pixel closest to the nearest XYZ point.
             nearest_xy = get_xy_pixel_from_xyz(nearest_xyz, pose[batch_inds], intrinsics[batch_inds])
             nearest_xy = nearest_xy.round().int()
             crop_result = get_image_crop_around(nearest_xy, rgb[batch_inds], (224, 224))
+            #print("crop_result")
+            #print(crop_result[0].shape)
+            #print(crop_result[0])
+            #print(crop_result[1].shape)
+            #print(crop_result[1])
 
             # If there was a cropped image, get the CLIP embeddings for it.
             crop_image: Tensor | None = None
@@ -227,6 +251,9 @@ class ClipSdfTask(ml.SupervisedLearningTask[ClipSdfTaskConfig, Model, Batch, Out
         # Adds the CLIP loss if there were any cropped images.
         if crop_result is not None and clip is not None:
             sims = clip_sim(clip_preds[crop_result[1]], clip)
+            #print("sims")
+            #print(sims.shape)
+            #print(sims)
             clip_loss = F.cross_entropy(sims, torch.arange(sims.shape[0], device=device), reduction="none")
 
             # Weight the CLIP loss by the softmax of the SDF.
@@ -241,7 +268,20 @@ class ClipSdfTask(ml.SupervisedLearningTask[ClipSdfTaskConfig, Model, Batch, Out
         self.logger.log_scalar("pmax", pmax)
 
         if state.phase == "valid":
-            # clip_image, sdf_image = self.get_clip_and_sdf_images(model, device, preds.dtype)
+            if wandb.run is not None:
+                wandb.log({"sdf": torch.sum(losses["sdf"]).item()}, step = state.num_steps)
+            if "clip" in losses and wandb.run is not None:
+                wandb.log({"clip": torch.sum(losses["clip"]).item()}, step = state.num_steps)
+            clip_images, sdf_image = self.get_clip_and_sdf_images(model, device, preds.dtype)
+            for i in range(len(clip_images)):
+                if wandb.run is not None:
+                    wandb.log({self.config.queries[i] + " score map": wandb.Image(
+                            clip_images[i])
+                          }, step = state.num_steps)
+            if wandb.run is not None:
+                wandb.log({"sdf prediction": wandb.Image(
+                            sdf_image)
+                          }, step = state.num_steps)
             # self.logger.log_image("sdf", sdf_image)
             self.logger.log_point_cloud("xyz", torch.stack([xyz, nearest_xyz.to(xyz)]))
             self.logger.log_point_cloud("surface", batch_xyz.to(xyz))
@@ -299,7 +339,7 @@ class ClipSdfTask(ml.SupervisedLearningTask[ClipSdfTaskConfig, Model, Batch, Out
             return clip_preds.permute(2, 0, 1), sdf_preds
 
     def get_dataset(self, phase: ml.Phase) -> Dataset[PosedRGBDItem]:
-        return self._dataset
+        return self._dataset()
 
 
 def test_sdf_dataset(max_samples: int = 3) -> None:

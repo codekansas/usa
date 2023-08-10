@@ -1,0 +1,170 @@
+model:
+  name: point2emb
+  num_layers: 4
+  hidden_dims: 256
+  num_pos_embs: 6
+  output_dims: 513
+  norm: no_norm
+  act: relu
+task:
+  name: clip_sdf
+  finished:
+    max_epochs: null
+    max_steps: 10000
+    max_samples: null
+  error_handling:
+    enabled: true
+    maximum_exceptions: 10
+    backoff_after: 5
+    sleep_backoff: 0.1
+    sleep_backoff_power: 2.0
+    log_full_exception: false
+    flush_exception_summary_every: 500
+    report_top_n_exception_types: 5
+    exception_location_traceback_depth: 3
+  dataloader:
+    train:
+      batch_size: 16
+      shuffle: true
+      num_workers: 0
+      pin_memory: true
+      drop_last: true
+      timeout: 0.0
+      prefetch_factor: null
+      persistent_workers: false
+      seed: 1337
+    valid:
+      batch_size: 16
+      shuffle: true
+      num_workers: 0
+      pin_memory: false
+      drop_last: false
+      timeout: 0.0
+      prefetch_factor: null
+      persistent_workers: false
+      seed: 1337
+    test:
+      batch_size: 16
+      shuffle: false
+      num_workers: 0
+      pin_memory: false
+      drop_last: false
+      timeout: 0.0
+      prefetch_factor: null
+      persistent_workers: false
+      seed: 1337
+  loss:
+    reduce_type: sum
+  dataset: lab_stretch
+  dataset_path: null
+  clip_model: ViT_B_16
+  queries:
+  - Chair
+  - Shelves
+  - Man sitting at a computer
+  - Desktop computers
+  - Wooden box
+  - Doorway
+  rotate_image: true
+  pts_per_frame: 100
+  min_depth_prct: 0.1
+  points_to_sample: 50
+  image_shape:
+  - 224
+  - 224
+optimizer:
+  name: adam
+  lr: 0.001
+  betas:
+  - 0.9
+  - 0.999
+  eps: 0.0001
+  weight_decay: 0.0
+  amsgrad: false
+  foreach: false
+  capturable: false
+  differentiable: false
+  fused: false
+lr_scheduler:
+  name: linear
+  warmup_steps: 100
+  total_steps: 10000
+  warmup_percent: 0.01
+  min_scale: 0.0001
+  decay: true
+trainer:
+  name: sl
+  exp_name: 4_256_no
+  log_dir_name: logs
+  base_run_dir: lab_stretch
+  run_id: 4
+  use_double_weight_precision: false
+  checkpoint:
+    save_every_n_steps: 2500
+    only_save_most_recent: true
+    load_from_ckpt_path: null
+  parallel:
+    use_fsdp: false
+    cpu_offload: false
+    sharding_strategy: HYBRID_SHARD
+    sync_module_states: true
+  torch_compile:
+    enabled: false
+    fullgraph: false
+    dynamic: false
+    backend: auto
+    mode: max-autotune
+  cpu_stats_ping_interval: 1
+  cpu_stats_only_log_once: false
+  gpu_stats_ping_interval: 10
+  gpu_stats_only_log_once: false
+  fp16:
+    enabled: true
+    init_scale: 65536.0
+    growth_factor: 2.0
+    backoff_factor: 0.5
+    growth_interval: 2000
+  grad_clipping:
+    clip_grad_norm: null
+    clip_grad_value: null
+    norm_type: 2
+  profiler:
+    enabled: false
+    record_shapes: false
+    profile_memory: false
+    with_stack: false
+    with_flops: false
+    with_modules: false
+    wait_steps: 10
+    warmup_steps: 10
+    active_steps: 10
+    repeat_steps: 1
+    skip_first_steps: 10
+    table_size: 10
+  set_to_none: true
+  deterministic: false
+  use_tf32: true
+  detect_anomaly: false
+  detect_anomaly_check_nan: false
+  validation:
+    valid_every_n_steps: 250
+    num_init_valid_steps: 1
+  batches_per_step: 1
+  batches_per_step_schedule: null
+logger:
+- name: stdout
+  write_every_n_seconds: null
+  write_train_every_n_seconds: null
+  write_val_every_n_seconds: null
+  precision: 4
+launcher:
+  name: slurm
+  partition: none
+  time_limit: 3-00:00:00
+  num_nodes: 1
+  gpus_per_node: 1
+  cpus_per_gpu: 1
+  gpu_type: null
+  num_jobs: 1
+  comment: null
+  master_port: 40838

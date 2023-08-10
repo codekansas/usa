@@ -94,7 +94,9 @@ class ClipSdfPlanner(Planner):
         xs, ys, zs = torch.meshgrid(
             torch.arange(x_min, x_max, self.occ_map.resolution),
             torch.arange(y_min, y_max, self.occ_map.resolution),
-            torch.tensor([self.min_z, self.max_z]),
+            #torch.tensor([self.min_z, self.max_z]),
+            #torch.tensor([self.min_z, (self.min_z + self.max_z) / 2,  self.max_z]),
+            torch.arange(self.min_z, self.max_z, 0.2),
             indexing="xy",
         )
 
@@ -172,6 +174,7 @@ class AStarPlanner(ClipSdfPlanner):
         cache_dir: Path | None = None,
         floor_height: float = 0.1,
         ceil_height: float = 1.3,
+        occ_avoid_radius: float = 0.3
     ) -> None:
         super().__init__(
             dataset=dataset,
@@ -182,6 +185,7 @@ class AStarPlanner(ClipSdfPlanner):
             cache_dir=cache_dir,
             floor_height=floor_height,
             ceil_height=ceil_height,
+            occ_avoid_radius = occ_avoid_radius
         )
 
         # Gets the map from the parent class.
@@ -192,7 +196,7 @@ class AStarPlanner(ClipSdfPlanner):
             heuristic=heuristic,
             is_occ=clip_sdf_map.grid,
             origin=clip_sdf_map.origin,
-            resolution=clip_sdf_map.resolution,
+            resolution=clip_sdf_map.resolution
         )
 
     def plan(
@@ -205,7 +209,7 @@ class AStarPlanner(ClipSdfPlanner):
         if end_goal is not None:
             assert end_xy is None, "Cannot specify both end_xy and end_goal"
             end_xy = self.get_end_xy(start_xy, end_goal)
-
+        
         return self.a_star_planner.plan(
             start_xy=start_xy,
             end_xy=end_xy,
@@ -228,7 +232,8 @@ class AStarPlanner(ClipSdfPlanner):
         all_clip_sims = []
         for xyz_chunk in tqdm.tqdm(torch.split(xyzs, 64)):
             clip_embs = self.model(xyz_chunk)[:, :-1]
-            tok_scores = embs @ clip_embs.T
+            #tok_scores = embs @ clip_embs.T
+            tok_scores = torch.cosine_similarity(embs, clip_embs)
             all_clip_sims.append(tok_scores.flatten(0).detach().cpu())
 
         return torch.cat(all_clip_sims, dim=0).view(xs.shape).max(dim=-1, keepdim=True).values.numpy()
@@ -276,6 +281,7 @@ class GradientPlanner(ClipSdfPlanner):
         cache_dir: Path | None = None,
         floor_height: float = 0.1,
         ceil_height: float = 1.3,
+        occ_avoid_radius: float = 0.3
     ) -> None:
         # Constant resolution.
         visualization_resolution = 0.025
@@ -290,6 +296,7 @@ class GradientPlanner(ClipSdfPlanner):
             cache_dir=None if cache_dir is None else cache_dir / "gradient",
             floor_height=floor_height,
             ceil_height=ceil_height,
+            occ_avoid_radius = occ_avoid_radius
         )
 
         # Gradient planner parameters.
@@ -312,6 +319,7 @@ class GradientPlanner(ClipSdfPlanner):
             cache_dir=None if cache_dir is None else cache_dir / "base_planner",
             floor_height=floor_height,
             ceil_height=ceil_height,
+            occ_avoid_radius = occ_avoid_radius
         )
 
     def get_target_query_emb(self, end_goal: str) -> Tensor:
@@ -333,18 +341,23 @@ class GradientPlanner(ClipSdfPlanner):
 
         # Gets a seed path from the base planner.
         seed_path = self.base_planner.plan(start_xy, end_xy, end_goal, remove_line_of_sight_points=False)
+        #print(seed_path)
         xys = self.device.tensor_to(torch.tensor(seed_path))
         xys.requires_grad_(True)
 
         def get_losses(xys: Tensor) -> dict[str, Tensor]:
             # Loss for avoiding obstacles.
             waypoint_xyz_min = torch.cat([xys[1:], torch.full_like(xys[1:, :1], self.min_z)], dim=-1)
+            waypoint_xyz_mid = torch.cat([xys[1:], torch.full_like(xys[1:, :1], (self.max_z + self.min_z)/2)], dim=-1)
             waypoint_xyz_max = torch.cat([xys[1:], torch.full_like(xys[1:, :1], self.max_z)], dim=-1)
             preds_min = self.model(waypoint_xyz_min)
+            preds_mid = self.model(waypoint_xyz_mid)
             preds_max = self.model(waypoint_xyz_max)
             clip_preds_min, sdf_preds_min = preds_min[-1:, :-1], preds_min[..., -1]
+            clip_preds_mid, sdf_preds_mid = preds_mid[-1:, :-1], preds_mid[..., -1]
             clip_preds_max, sdf_preds_max = preds_max[-1:, :-1], preds_max[..., -1]
             sdf_preds = torch.stack([sdf_preds_min, sdf_preds_max], dim=-1).min(-1).values
+            #sdf_preds = torch.stack([sdf_preds_min, sdf_preds_mid, sdf_preds_max], dim=-1).min(-1).values
             # is_inside_obs = sdf_preds < self.occ_avoid_radius + 1e-3
             occ_loss = torch.clamp_min(self.occ_avoid_radius - sdf_preds, 0).sum()
 
@@ -367,9 +380,13 @@ class GradientPlanner(ClipSdfPlanner):
             # Embedding loss for the final waypoint; try to maximize the
             # similarity between it's clip embedding and the target embedding.
             if target_emb is not None:
-                sim_score_min = clip_preds_min @ target_emb.T
-                sim_score_max = clip_preds_max @ target_emb.T
+                #sim_score_min = clip_preds_min @ target_emb.T
+                #sim_score_max = clip_preds_max @ target_emb.T
+                sim_score_min = torch.cosine_similarity(clip_preds_min, target_emb.T)
+                sim_score_mid = torch.cosine_similarity(clip_preds_mid, target_emb.T)
+                sim_score_max = torch.cosine_similarity(clip_preds_max, target_emb.T)
                 sim_score = torch.cat([sim_score_min, sim_score_max]).max()
+                #sim_score = torch.cat([sim_score_min, sim_score_mid, sim_score_max]).max()
                 # sim_score = torch.where(is_inside_obs[-1], torch.zeros_like(sim_score), sim_score)
                 sim_loss = -sim_score
                 losses["sim"] = sim_loss * self.sim_loss_weight
@@ -379,7 +396,7 @@ class GradientPlanner(ClipSdfPlanner):
         # Optimization loop, just using gradient descent.
         prev_xys: Tensor | None = None
 
-        # opt = torch.optim.Adam([xys], lr=self.lr)
+        #opt = torch.optim.Adam([xys], lr=self.lr)
         opt = torch.optim.SGD([xys], lr=self.lr, momentum=0.9)
 
         for _ in tqdm.trange(self.num_optimization_steps):
@@ -390,6 +407,7 @@ class GradientPlanner(ClipSdfPlanner):
 
             # First point doesn't change, last point only changes if we have
             # a goal embedding rather than XY coordinate.
+            #print(xys)
             xys_grad = cast(Tensor, xys.grad)
             xys_grad[:1].zero_()
             if target_emb is None:
