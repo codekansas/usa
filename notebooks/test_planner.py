@@ -17,7 +17,7 @@ assert isinstance(task, ClipSdfTask)
 
 
 grid_planner = AStarPlanner(
-    dataset=task._dataset,
+    dataset=task._dataset(),
     model=model.double(),
     task=task.double(),
     device=task._device,
@@ -30,7 +30,7 @@ grid_planner = AStarPlanner(
 ).double()
 
 gradient_planner = GradientPlanner(
-    dataset=task._dataset,
+    dataset=task._dataset(),
     model=model.double(),
     task=task.double(),
     device=task._device,

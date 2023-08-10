@@ -146,12 +146,15 @@ class ClipSdfTask(ml.SupervisedLearningTask[ClipSdfTaskConfig, Model, Batch, Out
         self.clip.linguistic.apply(fn)
         return super().apply(fn)
 
+<<<<<<< HEAD
     def _get_posed_rgb_dataset(self) -> Dataset[PosedRGBDItem]:
         return get_posed_rgbd_dataset(self.config.dataset, path=self.config.dataset_path)
 
     #@functools.cached_property
+=======
+>>>>>>> eefccfe349c7c333ed8e6c7d4a13cdf2fb810532
     def _dataset(self) -> Dataset[PosedRGBDItem]:
-        return self._get_posed_rgb_dataset()
+        return get_posed_rgbd_dataset(self.config.dataset, path=self.config.dataset_path)
 
     @functools.lru_cache
     def text_clip_embs(self, device: torch.device) -> Tensor:
