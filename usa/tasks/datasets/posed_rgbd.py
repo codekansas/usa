@@ -70,6 +70,9 @@ def get_posed_rgbd_dataset(
         return chess_stretch_dataset()
     if key.startswith("replica_"):
         return ReplicaCADDataset(key[len("replica_") :], img_dim=img_dim, random_crop=random_crop)
+    # decoding the custom r3d file, config.task.dataset should be the path to r3d file
+    else:
+        return R3DDataset(path = key, img_dim=img_dim, random_crop=random_crop)
     raise NotImplementedError(f"Unsupported dataset key: {key}")
 
 

@@ -150,7 +150,7 @@ class ClipSdfTask(ml.SupervisedLearningTask[ClipSdfTaskConfig, Model, Batch, Out
     def _get_posed_rgb_dataset(self) -> Dataset[PosedRGBDItem]:
         return get_posed_rgbd_dataset(self.config.dataset, path=self.config.dataset_path)
 
-    #@functools.cached_property
+    @functools.cached_property
     def _dataset(self) -> Dataset[PosedRGBDItem]:
         return get_posed_rgbd_dataset(self.config.dataset, path=self.config.dataset_path)
 
@@ -338,7 +338,7 @@ class ClipSdfTask(ml.SupervisedLearningTask[ClipSdfTaskConfig, Model, Batch, Out
             return clip_preds.permute(2, 0, 1), sdf_preds
 
     def get_dataset(self, phase: ml.Phase) -> Dataset[PosedRGBDItem]:
-        return self._dataset()
+        return self._dataset
 
 
 def test_sdf_dataset(max_samples: int = 3) -> None:

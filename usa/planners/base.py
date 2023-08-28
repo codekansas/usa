@@ -10,6 +10,8 @@ from torch.utils.data.dataset import Dataset
 from usa.tasks.datasets.posed_rgbd import get_bounds, get_poses, iter_xyz
 from usa.tasks.datasets.types import PosedRGBDItem
 
+import cv2
+
 
 @dataclass
 class Map:
@@ -32,12 +34,11 @@ class Map:
     def is_occupied(self, pt: tuple[int, int]) -> bool:
         return bool(self.grid[pt[1], pt[0]])
 
-
 def get_occupancy_map_from_dataset(
     ds: Dataset[PosedRGBDItem],
     cell_size: float,
     occ_height_range: tuple[float, float],
-    occ_threshold: int = 100,
+    occ_threshold: int = 20,
     clear_around_bot_radius: float = 0.0,
     cache_dir: Path | None = None,
     ignore_cached: bool = True,
@@ -86,8 +87,8 @@ def get_occupancy_map_from_dataset(
                 xyz = xyz[~mask_tensor]
                 xy = xyz[:, :2]
 
-                xs = ((xy[:, 0] - origin[0]) / resolution).floor().long()
-                ys = ((xy[:, 1] - origin[1]) / resolution).floor().long()
+                xs = ((xy[:, 0] - origin[0] + resolution / 2) / resolution).floor().long()
+                ys = ((xy[:, 1] - origin[1] + resolution / 2) / resolution).floor().long()
 
                 if counts is None:
                     counts = xy.new_zeros((ybins, xbins), dtype=torch.int32).flatten()
@@ -130,12 +131,24 @@ def get_occupancy_map_from_dataset(
                     y0, y1 = min(max(y0, 0), ybins), min(max(y1, 0), ybins)
                     counts[y0:y1, x0:x1] = 0
                     any_counts[y0:y1, x0:x1] = True
-
+                    
             occ_map = ((counts >= occ_threshold) | ~any_counts).cpu().numpy()
+            occ_map_copy = occ_map.copy()
+
+            for i in range(occ_map.shape[0]):
+                for j in range(occ_map.shape[1]):
+                    if occ_map_copy[i, j] == -1:
+                        occ_map[max(0, i - 2): min(occ_map.shape[0] - 1, i + 2), max(0, j - 2): min(occ_map.shape[1] - 1, j + 2)] = -1
+            
+            #cv2.imwrite('map1.jpg', np.where((counts >= occ_threshold).cpu().numpy(), 255, 0).astype(np.uint8))
+            #cv2.imwrite('map2.jpg', np.where((~any_counts).cpu().numpy(), 255, 0).astype(np.uint8))
+            #cv2.imwrite('map3.jpg', np.where(occ_map, 255, 0).astype(np.uint8))
 
             if cache_loc is not None:
                 cache_loc.parent.mkdir(parents=True, exist_ok=True)
                 np.save(cache_loc, occ_map)
+
+            
 
     return Map(occ_map, resolution, origin)
 
