@@ -42,6 +42,7 @@ def get_occupancy_map_from_dataset(
     clear_around_bot_radius: float = 0.0,
     cache_dir: Path | None = None,
     ignore_cached: bool = True,
+    conservative: bool = True
 ) -> Map:
     """Gets the occupancy map from the given dataset.
 
@@ -131,18 +132,17 @@ def get_occupancy_map_from_dataset(
                     y0, y1 = min(max(y0, 0), ybins), min(max(y1, 0), ybins)
                     counts[y0:y1, x0:x1] = 0
                     any_counts[y0:y1, x0:x1] = True
-                    
-            occ_map = ((counts >= occ_threshold) | ~any_counts).cpu().numpy()
+            
+            if conservative:
+                occ_map = ((counts >= occ_threshold) | ~any_counts).cpu().numpy()
+            else:
+                occ_map = (counts >= occ_threshold).cpu().numpy()
             occ_map_copy = occ_map.copy()
 
             for i in range(occ_map.shape[0]):
                 for j in range(occ_map.shape[1]):
                     if occ_map_copy[i, j] == -1:
                         occ_map[max(0, i - 2): min(occ_map.shape[0] - 1, i + 2), max(0, j - 2): min(occ_map.shape[1] - 1, j + 2)] = -1
-            
-            #cv2.imwrite('map1.jpg', np.where((counts >= occ_threshold).cpu().numpy(), 255, 0).astype(np.uint8))
-            #cv2.imwrite('map2.jpg', np.where((~any_counts).cpu().numpy(), 255, 0).astype(np.uint8))
-            #cv2.imwrite('map3.jpg', np.where(occ_map, 255, 0).astype(np.uint8))
 
             if cache_loc is not None:
                 cache_loc.parent.mkdir(parents=True, exist_ok=True)
@@ -151,6 +151,64 @@ def get_occupancy_map_from_dataset(
             
 
     return Map(occ_map, resolution, origin)
+
+def get_ground_truth_map_from_dataset(
+    ds, cell_size, occ_height_range,
+    occ_threshold: int = 20,
+    clear_around_bot_radius: float = 0.0,
+    cache_dir: Path | None = None,
+    ignore_cached: bool = True,
+):
+
+    bounds = get_bounds(ds, cache_dir)
+    origin = (bounds.xmin, bounds.ymin)
+    resolution = cell_size
+
+    min_height, max_height = occ_height_range
+    args = (min_height, max_height, occ_threshold, clear_around_bot_radius)
+    args_str = "_".join(str(a) for a in args)
+    cache_loc = None if cache_dir is None else cache_dir / f"gt_map_{args_str}.npy"
+
+    if not ignore_cached and cache_loc is not None and cache_loc.is_file():
+        occ_map = np.load(cache_loc)
+
+    else:
+        xbins, ybins = int(bounds.xdiff / resolution) + 1, int(bounds.ydiff / resolution) + 1
+        counts: Tensor | None = None
+
+        # Counts the number of points in each cell.
+        with torch.no_grad():
+            for xyz, mask_tensor in iter_xyz(ds, "Ground Truth Map"):
+                xyz = xyz[~mask_tensor]
+                xy = xyz[:, :2]
+
+                xs = ((xy[:, 0] - origin[0] + resolution / 2) / resolution).floor().long()
+                ys = ((xy[:, 1] - origin[1] + resolution / 2) / resolution).floor().long()
+
+                if counts is None:
+                    counts = xy.new_zeros((ybins, xbins), dtype=torch.int32).flatten()
+
+                # Counts the number of occupying points in each cell.
+                occ_xys = (xyz[:, 2] >= min_height) & (xyz[:, 2] <= max_height)
+
+                if len(occ_xys) != 0:
+                    occ_inds = ys[occ_xys] * xbins + xs[occ_xys]
+                    counts.index_add_(0, occ_inds, torch.ones_like(xs[occ_xys], dtype=torch.int32))
+
+                # Keeps track of the cells that have any points from anywhere.
+                inds = ys * xbins + xs
+
+
+            assert counts is not None, "No points in the dataset"
+            counts = counts.reshape((ybins, xbins))
+                    
+            occ_map = ((counts >= occ_threshold)).cpu().numpy()
+
+            if cache_loc is not None:
+                cache_loc.parent.mkdir(parents=True, exist_ok=True)
+                np.save(cache_loc, occ_map)
+
+    return occ_map
 
 
 class Planner(nn.Module, ABC):

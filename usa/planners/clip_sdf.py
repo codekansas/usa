@@ -88,7 +88,8 @@ class ClipSdfPlanner(Planner):
             )
 
         x_min, y_min = occ_map_pt_to_xy((0, 0))
-        x_max, y_max = occ_map_pt_to_xy((x_pixels, y_pixels))
+        # keep occupancy map (vl map) the same shape with sdf map
+        x_max, y_max = occ_map_pt_to_xy((x_pixels - 1, y_pixels - 1))
 
         # Gets the X, Y, and Z centers for each element in the grid.
         xs, ys, zs = torch.meshgrid(
@@ -117,8 +118,8 @@ class ClipSdfPlanner(Planner):
         for xyz_chunk in tqdm.tqdm(torch.split(xyzs, 64)):
             # This is the old implementation, which just checks if the center
             # of a cell is occupied when building the occupancy grid.
-            # sdf = self.model(xyz_chunk)[:, -1]
-            # all_sdfs.append((sdf < self.occ_avoid_radius).cpu())
+            #sdf = self.model(xyz_chunk)[:, -1]
+            #all_sdfs.append((sdf < self.occ_avoid_radius).cpu())
 
             # Thresholds the SDFs for the corners. This is kind of inefficient
             # because there is some duplication between the corners, but it
@@ -205,15 +206,24 @@ class AStarPlanner(ClipSdfPlanner):
         end_xy: tuple[float, float] | None = None,
         end_goal: str | None = None,
         remove_line_of_sight_points: bool = True,
-    ) -> list[tuple[float, float]]:
+    ) -> list[tuple[float, float, float]]:
         if end_goal is not None:
             assert end_xy is None, "Cannot specify both end_xy and end_goal"
-            end_xy = self.get_end_xy(start_xy, end_goal)
-        return self.a_star_planner.plan(
+            end_xy, end_theta = self.get_end_xy(start_xy, end_goal)
+        if end_xy is not None:
+            assert end_goal is None, "Cannot specify both end_xy and end_goal"
+            end_xy, end_theta = self.get_end_xy(start_xy, end_xy)
+        waypoints = self.a_star_planner.plan(
             start_xy=start_xy,
             end_xy=end_xy,
             remove_line_of_sight_points=remove_line_of_sight_points,
         )
+        xyt_points = []
+        for i in range(len(waypoints) - 1):
+            theta = self.compute_theta(waypoints[i][0], waypoints[i][1], waypoints[i + 1][0], waypoints[i + 1][1])
+            xyt_points.append((waypoints[i][0], waypoints[i][1], float(theta)))
+        xyt_points.append((waypoints[-1][0], waypoints[-1][1], end_theta))
+        return xyt_points
 
     @functools.lru_cache
     def get_score_map(self, end_goal: str) -> np.ndarray:
@@ -237,23 +247,50 @@ class AStarPlanner(ClipSdfPlanner):
 
         return torch.cat(all_clip_sims, dim=0).view(xs.shape).max(dim=-1, keepdim=True).values.numpy()
 
-    def get_end_xy(self, start_xy: tuple[float, float], end_goal: str) -> tuple[float, float]:
-        score_map = self.get_score_map(end_goal)
-        start_pt = self.a_star_planner.to_pt(start_xy)
-        reachable_pts = self.a_star_planner.get_reachable_points(start_pt)
-        xs, ys = zip(*reachable_pts)
-        reachable_map = np.zeros_like(score_map, dtype=bool)
-        reachable_map[ys, xs] = True
+    def compute_theta(self, cur_x, cur_y, end_x, end_y):
+        theta = 0
+        if end_x == cur_x and end_y >= cur_y:
+            theta = np.pi / 2
+        elif end_x == cur_x and end_y < cur_y:
+            theta = -np.pi / 2
+        else:
+            theta = np.arctan((end_y - cur_y) / (end_x - cur_x))
+            if end_x < cur_x:
+                theta = theta + np.pi
+        return theta
 
-        # Gets the (X, Y) index of the highest scoring unoccupied point.
-        unocc_points = np.argwhere(reachable_map)
-        best_point_index = np.argmax(score_map[unocc_points[:, 0], unocc_points[:, 1]])
-        y, x, _ = unocc_points[best_point_index]
+    def get_end_xy(self, start_xy: tuple[float, float], end_goal):
+        if type(end_goal) == type(''):
+            score_map = self.get_score_map(end_goal)
+            start_pt = self.a_star_planner.to_pt(start_xy)
+            reachable_pts = self.a_star_planner.get_reachable_points(start_pt)
 
-        assert not self.a_star_planner.point_is_occupied(x, y), "Best point is occupied"
+            #TODO
+            # If the end_goal is text query, search through unreachable_pts instead
 
-        # Converts to (X, Y) coordinates.
-        return self.a_star_planner.to_xy((x, y))
+            xs, ys = zip(*reachable_pts)
+            reachable_map = np.zeros_like(score_map, dtype=bool)
+            reachable_map[ys, xs] = True
+
+            # Gets the (X, Y) index of the highest scoring unoccupied point.
+            unocc_points = np.argwhere(reachable_map)
+            best_point_index = np.argmax(score_map[unocc_points[:, 0], unocc_points[:, 1]])
+            y, x, _ = unocc_points[best_point_index]
+            theta = 0
+
+            assert not self.a_star_planner.point_is_occupied(x, y), "Best point is occupied"
+
+            # Converts to (X, Y) coordinates.
+            return self.a_star_planner.to_xy((x, y)), theta
+
+        else:
+            start_pt = self.a_star_planner.to_pt(start_xy)
+            reachable_pts = self.a_star_planner.get_reachable_points(start_pt)
+            reachable_points = torch.tensor([self.a_star_planner.to_xy(pt) for pt in reachable_pts])
+            x, y = reachable_points[torch.argmin(torch.linalg.norm(reachable_points - torch.tensor(end_goal), dim = -1))]
+            theta = self.compute_theta(x, y, end_goal[0], end_goal[1])
+
+            return (float(x), float(y)), float(theta)
 
     def is_valid_starting_point(self, xy: tuple[float, float]) -> bool:
         return self.a_star_planner.is_valid_starting_point(xy)
@@ -340,7 +377,8 @@ class GradientPlanner(ClipSdfPlanner):
 
         # Gets a seed path from the base planner.
         seed_path = self.base_planner.plan(start_xy, end_xy, end_goal, remove_line_of_sight_points=False)
-        xys = self.device.tensor_to(torch.tensor(seed_path))
+        xyts = self.device.tensor_to(torch.tensor(seed_path))
+        xys = xyts[:, :2]
         xys.requires_grad_(True)
 
         def get_losses(xys: Tensor) -> dict[str, Tensor]:

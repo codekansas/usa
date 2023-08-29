@@ -30,10 +30,14 @@ class AStarPlanner(Planner):
         self.resolution = resolution
 
     def point_is_occupied(self, x: int, y: int) -> bool:
-        occ_map = self.get_map()
-        if x < 0 or y < 0 or x >= occ_map.grid.shape[1] or y >= occ_map.grid.shape[0]:
+        #occ_map = self.get_map()
+        #if x < 0 or y < 0 or x >= occ_map.grid.shape[1] or y >= occ_map.grid.shape[0]:
+        #    return True
+        #return bool(occ_map.grid[y][x])
+        occ_map = self.is_occ
+        if x < 0 or y < 0 or x >= occ_map.shape[1] or y >= occ_map.shape[0]:
             return True
-        return bool(occ_map.grid[y][x])
+        return bool(occ_map[y][x])
 
     def xy_is_occupied(self, x: float, y: float) -> bool:
         return self.point_is_occupied(*self.to_pt((x, y)))
