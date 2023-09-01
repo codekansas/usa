@@ -138,7 +138,7 @@ while True:
     print(socket.recv_string())
     send_array(socket, paths)
     print(paths)
-    fig, axes = plt.subplots(2, 1, figsize=(10, 10))
+    fig, axes = plt.subplots(2, 1, figsize=(8, 8))
     minx, miny = grid_planner.occ_map.origin
     (ycells, xcells), resolution = grid_planner.occ_map.grid.shape, grid_planner.occ_map.resolution
     maxx, maxy = minx + xcells * resolution, miny + ycells * resolution

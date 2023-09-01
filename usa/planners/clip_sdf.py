@@ -256,7 +256,7 @@ class AStarPlanner(ClipSdfPlanner):
         else:
             theta = np.arctan((end_y - cur_y) / (end_x - cur_x))
             if end_x < cur_x:
-                theta = theta + np.pi
+                theta = theta - np.pi
         return theta
 
     def get_end_xy(self, start_xy: tuple[float, float], end_goal):
