@@ -208,7 +208,7 @@ def get_ground_truth_map_from_dataset(
                 cache_loc.parent.mkdir(parents=True, exist_ok=True)
                 np.save(cache_loc, occ_map)
 
-    return occ_map
+    return Map(occ_map, resolution, origin)
 
 
 class Planner(nn.Module, ABC):
