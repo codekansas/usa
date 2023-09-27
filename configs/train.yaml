@@ -1,25 +1,30 @@
 model:
+  #name: ms_point2emb
   name: point2emb
   num_layers: 4
   hidden_dims: 256
-  output_dims: 513  # CLIP dimensions = 512 + SDF = 1
+  output_dims: 513
+  #output_dims: 512  # CLIP dimensions = 512 + SDF = 1
 
 task:
   name: clip_sdf
+  #name: ms_clip_sdf
   dataset: r3d
-  dataset_path: "../clip-fields/Kitchen.r3d"
-  clip_model: ViT_B_32
+  dataset_path: "../CDSLab.r3d"
+  points_to_sample: 50
+  clip_model: "ViT_B_32"
+  #scales: [30, 70, 110, 150, 190]
   queries:
     - Chair
-    - Refrigerator
-    - Microwave
-    - Trash can
-    - Sink
-    - Coffee Machine
-  rotate_image: true
+    - Apple
+    - Barricade
+    - Robot
+    - Clothes
+    - School bag
+  rotate_image: false
 
   finished:
-    max_steps: 8000
+    max_steps: 5000
   dataloader:
     train:
       batch_size: 16
@@ -34,7 +39,7 @@ lr_scheduler:
 
 trainer:
   exp_name: "4_256_no"
-  base_run_dir: "usa"
+  base_run_dir: "CDSLab"
   run_id: 0
   name: sl
   checkpoint:

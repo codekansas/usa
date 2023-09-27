@@ -4,6 +4,7 @@ import math
 from typing import Literal
 
 import numpy as np
+import torch
 
 from usa.planners.base import Map, Planner
 
@@ -21,6 +22,10 @@ class AStarPlanner(Planner):
         is_occ: np.ndarray,
         origin: tuple[float, float],
         resolution: float,
+        model = None,
+        device = None,
+        floor_height=None,
+        ceil_height=None
     ) -> None:
         super().__init__()
 
@@ -28,6 +33,10 @@ class AStarPlanner(Planner):
         self.is_occ = is_occ
         self.origin = origin
         self.resolution = resolution
+        self.model = model
+        self.device = device
+        self.floor_height = floor_height
+        self.ceil_height = ceil_height
 
     def point_is_occupied(self, x: int, y: int) -> bool:
         #occ_map = self.get_map()
@@ -50,16 +59,20 @@ class AStarPlanner(Planner):
 
     def compute_heuristic(self, a: tuple[int, int], b: tuple[int, int]) -> float:
         if self.heuristic == "manhattan":
-            return abs(a[0] - b[0]) + abs(a[1] - b[1])
+            dis = abs(a[0] - b[0]) + abs(a[1] - b[1])
         if self.heuristic == "euclidean":
-            return ((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2) ** 0.5
+            dis = ((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2) ** 0.5
         if self.heuristic == "octile":
             dx = abs(a[0] - b[0])
             dy = abs(a[1] - b[1])
-            return (dx + dy) + (1 - 2) * min(dx, dy)
+            dis = (dx + dy) + (1 - 2) * min(dx, dy)
         if self.heuristic == "chebyshev":
-            return max(abs(a[0] - b[0]), abs(a[1] - b[1]))
-        raise ValueError(f"Unknown heuristic: {self.heuristic}")
+            dis = max(abs(a[0] - b[0]), abs(a[1] - b[1]))
+        #if self.model:
+        #    dis += min(self.model(self.device.tensor_to(torch.tensor([a[0], a[1], self.floor_height])))[-1].item(), 30)
+        #    dis += min(self.model(self.device.tensor_to(torch.tensor([b[0], b[1], self.floor_height])))[-1].item(), 30)
+        return dis
+        #raise ValueError(f"Unknown heuristic: {self.heuristic}")
 
     def is_in_line_of_sight(self, start_pt: tuple[int, int], end_pt: tuple[int, int]) -> bool:
         """Checks if there is a line-of-sight between two points.

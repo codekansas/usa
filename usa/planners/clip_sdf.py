@@ -197,7 +197,11 @@ class AStarPlanner(ClipSdfPlanner):
             heuristic=heuristic,
             is_occ=clip_sdf_map.grid,
             origin=clip_sdf_map.origin,
-            resolution=clip_sdf_map.resolution
+            resolution=clip_sdf_map.resolution,
+            model = model,
+            device = device,
+            floor_height=floor_height,
+            ceil_height=ceil_height
         )
 
     def plan(

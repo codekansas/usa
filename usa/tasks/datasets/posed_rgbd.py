@@ -18,6 +18,7 @@ from usa.tasks.datasets.home_robot import (
 )
 from usa.tasks.datasets.pybullet import PyBulletDataset
 from usa.tasks.datasets.r3d import LabR3DDataset, R3DDataset, StudioR3DDataset
+from usa.tasks.datasets.r3d_precompute import MS_R3DDataset
 from usa.tasks.datasets.replica_cad import ReplicaCADDataset
 from usa.tasks.datasets.stretch import (
     chess_stretch_dataset,
@@ -53,6 +54,7 @@ def get_posed_rgbd_dataset(
             path = os.environ.get("R3D_DS_PATH")
         assert path is not None, "Path must be specified for `r3d` dataset; set `R3D_DS_PATH` env var"
         return R3DDataset(path, img_dim=img_dim, random_crop=random_crop)
+        #return MS_R3DDataset(path, img_dim=img_dim, random_crop=random_crop)
     if key == "chris_lab":
         return chris_lab_home_robot_dataset()
     if key == "lab_r3d":
@@ -72,7 +74,7 @@ def get_posed_rgbd_dataset(
         return ReplicaCADDataset(key[len("replica_") :], img_dim=img_dim, random_crop=random_crop)
     # decoding the custom r3d file, config.task.dataset should be the path to r3d file
     else:
-        return R3DDataset(path = key, img_dim=img_dim, random_crop=random_crop)
+        return R3DDataset(path = path, img_dim=img_dim, random_crop=random_crop)
     raise NotImplementedError(f"Unsupported dataset key: {key}")
 
 

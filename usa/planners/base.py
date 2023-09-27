@@ -78,7 +78,7 @@ def get_occupancy_map_from_dataset(
         occ_map = np.load(cache_loc)
 
     else:
-        xbins, ybins = int(bounds.xdiff / resolution) + 1, int(bounds.ydiff / resolution) + 1
+        xbins, ybins = int(bounds.xdiff / resolution) + 2, int(bounds.ydiff / resolution) + 2
         counts: Tensor | None = None
         any_counts: Tensor | None = None
 
@@ -173,7 +173,7 @@ def get_ground_truth_map_from_dataset(
         occ_map = np.load(cache_loc)
 
     else:
-        xbins, ybins = int(bounds.xdiff / resolution) + 1, int(bounds.ydiff / resolution) + 1
+        xbins, ybins = int(bounds.xdiff / resolution) + 2, int(bounds.ydiff / resolution) + 2
         counts: Tensor | None = None
 
         # Counts the number of points in each cell.
