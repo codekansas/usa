@@ -19,6 +19,24 @@ from usa.tasks.datasets.types import PosedRGBDItem
 logger = logging.getLogger(__name__)
 
 
+def compute_theta(cur_x, cur_y, end_x, end_y):
+    theta = 0
+    if end_x == cur_x and end_y >= cur_y:
+        theta = np.pi / 2
+    elif end_x == cur_x and end_y < cur_y:
+        theta = -np.pi / 2
+    else:
+        theta = np.arctan((end_y - cur_y) / (end_x - cur_x))
+        if end_x < cur_x:
+            theta = theta + np.pi
+        # move theta into [-pi, pi] range, for this function specifically, 
+        # (theta - 2 * pi) or (theta + 2 * pi) is enough
+        if theta > np.pi:
+            theta = theta - 2 * np.pi
+        if theta < np.pi:
+            theta + 2 * np.pi
+    return theta
+
 class ClipSdfPlanner(Planner):
     def __init__(
         self,
@@ -173,8 +191,8 @@ class AStarPlanner(ClipSdfPlanner):
         heuristic: Heuristic,
         resolution: float,
         cache_dir: Path | None = None,
-        floor_height: float = 0.1,
-        ceil_height: float = 1.3,
+        floor_height: float = -1,
+        ceil_height: float = 0,
         occ_avoid_radius: float = 0.3
     ) -> None:
         super().__init__(
@@ -224,7 +242,7 @@ class AStarPlanner(ClipSdfPlanner):
         )
         xyt_points = []
         for i in range(len(waypoints) - 1):
-            theta = self.compute_theta(waypoints[i][0], waypoints[i][1], waypoints[i + 1][0], waypoints[i + 1][1])
+            theta = compute_theta(waypoints[i][0], waypoints[i][1], waypoints[i + 1][0], waypoints[i + 1][1])
             xyt_points.append((waypoints[i][0], waypoints[i][1], float(theta)))
         xyt_points.append((waypoints[-1][0], waypoints[-1][1], end_theta))
         return xyt_points
@@ -250,24 +268,6 @@ class AStarPlanner(ClipSdfPlanner):
             all_clip_sims.append(tok_scores.flatten(0).detach().cpu())
 
         return torch.cat(all_clip_sims, dim=0).view(xs.shape).max(dim=-1, keepdim=True).values.numpy()
-
-    def compute_theta(self, cur_x, cur_y, end_x, end_y):
-        theta = 0
-        if end_x == cur_x and end_y >= cur_y:
-            theta = np.pi / 2
-        elif end_x == cur_x and end_y < cur_y:
-            theta = -np.pi / 2
-        else:
-            theta = np.arctan((end_y - cur_y) / (end_x - cur_x))
-            if end_x < cur_x:
-                theta = theta + np.pi
-            # move theta into [-pi, pi] range, for this function specifically, 
-            # (theta - 2 * pi) or (theta + 2 * pi) is enough
-            if theta > np.pi:
-                theta = theta - 2 * np.pi
-            if theta < np.pi:
-                theta + 2 * np.pi
-        return theta
 
     def get_end_xy(self, start_xy: tuple[float, float], end_goal):
         if type(end_goal) == type(''):
@@ -298,7 +298,7 @@ class AStarPlanner(ClipSdfPlanner):
             reachable_pts = self.a_star_planner.get_reachable_points(start_pt)
             reachable_points = torch.tensor([self.a_star_planner.to_xy(pt) for pt in reachable_pts])
             x, y = reachable_points[torch.argmin(torch.linalg.norm(reachable_points - torch.tensor(end_goal), dim = -1))]
-            theta = self.compute_theta(x, y, end_goal[0], end_goal[1])
+            theta = compute_theta(x, y, end_goal[0], end_goal[1])
 
             return (float(x), float(y)), float(theta)
 
@@ -325,8 +325,8 @@ class GradientPlanner(ClipSdfPlanner):
         num_optimization_steps: int = 1000,
         min_distance: float = 1e-5,
         cache_dir: Path | None = None,
-        floor_height: float = 0.1,
-        ceil_height: float = 1.3,
+        floor_height: float = -1,
+        ceil_height: float = 0,
         occ_avoid_radius: float = 0.3
     ) -> None:
         # Constant resolution.
@@ -405,7 +405,8 @@ class GradientPlanner(ClipSdfPlanner):
             sdf_preds = torch.stack([sdf_preds_min, sdf_preds_max], dim=-1).min(-1).values
             #sdf_preds = torch.stack([sdf_preds_min, sdf_preds_mid, sdf_preds_max], dim=-1).min(-1).values
             # is_inside_obs = sdf_preds < self.occ_avoid_radius + 1e-3
-            occ_loss = torch.clamp_min(self.occ_avoid_radius - sdf_preds, 0).sum()
+            occ_loss = torch.clamp_min(self.occ_avoid_radius - sdf_preds, self.occ_avoid_radius - 0.6).sum()
+            #occ_loss = (self.occ_avoid_radius - sdf_preds).sum()
 
             norms = torch.norm(xys[1:] - xys[:-1], dim=-1)
 
@@ -426,14 +427,10 @@ class GradientPlanner(ClipSdfPlanner):
             # Embedding loss for the final waypoint; try to maximize the
             # similarity between it's clip embedding and the target embedding.
             if target_emb is not None:
-                #sim_score_min = clip_preds_min @ target_emb.T
-                #sim_score_max = clip_preds_max @ target_emb.T
                 sim_score_min = torch.cosine_similarity(clip_preds_min, target_emb.T)
                 sim_score_mid = torch.cosine_similarity(clip_preds_mid, target_emb.T)
                 sim_score_max = torch.cosine_similarity(clip_preds_max, target_emb.T)
                 sim_score = torch.cat([sim_score_min, sim_score_max]).max()
-                #sim_score = torch.cat([sim_score_min, sim_score_mid, sim_score_max]).max()
-                # sim_score = torch.where(is_inside_obs[-1], torch.zeros_like(sim_score), sim_score)
                 sim_loss = -sim_score
                 losses["sim"] = sim_loss * self.sim_loss_weight
 
@@ -473,12 +470,15 @@ class GradientPlanner(ClipSdfPlanner):
             #     tqdm.tqdm.write(f"diff: {(xys - prev_xys).norm().item()}")
             prev_xys = xys.detach().clone()
 
-        points = [(x, y) for x, y in xys.detach().cpu().numpy().tolist()]  # pylint: disable=unnecessary-comprehension
-
+        waypoints = [(x, y) for x, y in xys.detach().cpu().numpy().tolist()]  # pylint: disable=unnecessary-comprehension
         # Explicitly delete the optimizer and points.
         del opt, xys
-
-        return points
+        xyt_points = []
+        for i in range(len(waypoints) - 1):
+            theta = compute_theta(waypoints[i][0], waypoints[i][1], waypoints[i + 1][0], waypoints[i + 1][1])
+            xyt_points.append((waypoints[i][0], waypoints[i][1], float(theta)))
+        xyt_points.append(seed_path[-1])
+        return xyt_points
 
     def is_valid_starting_point(self, xy: tuple[float, float]) -> bool:
         min_xyz, max_xyz = (xy[0], xy[1], self.min_z), (xy[0], xy[1], self.max_z)

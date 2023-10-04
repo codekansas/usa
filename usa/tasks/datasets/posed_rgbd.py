@@ -28,6 +28,8 @@ from usa.tasks.datasets.stretch import (
 from usa.tasks.datasets.types import PosedRGBDItem
 from usa.tasks.datasets.utils import aminmax, get_inv_intrinsics
 
+import open3d as o3d
+
 logger = logging.getLogger(__name__)
 
 
@@ -196,6 +198,49 @@ def iter_xyz(ds: Dataset[PosedRGBDItem], desc: str, chunk_size: int = 16) -> Ite
         )
         xyz = get_xyz(depth, mask, pose, intrinsics)
         yield xyz, mask.squeeze(1)
+
+def get_pointcloud(ds: Dataset[PosedRGBDItem], chunk_size: int = 16, threshold:float = 0.9) -> Iterator[tuple[Tensor, Tensor]]:
+    """Iterates XYZ points from the dataset.
+
+    Args:
+        ds: The dataset to iterate points from
+        desc: TQDM bar description
+        chunk_size: Process this many frames from the dataset at a time
+
+    Yields:
+        The XYZ coordinates, with shape (B, H, W, 3), and a mask where a value
+        of True means that the XYZ coordinates should be ignored at that
+        point, with shape (B, H, W)
+    """
+
+    device = ml.AutoDevice.detect_device()
+    ds_len = len(ds)  # type: ignore
+    xyzs = []
+    rgbs = []
+
+    for inds in more_itertools.chunked(tqdm.trange(ds_len, desc='point cloud'), chunk_size):
+        rgb, depth, mask, pose, intrinsics = (
+            torch.stack(ts, dim=0)
+            for ts in zip(
+                *((device.tensor_to(t) for t in (i.image, i.depth, i.mask, i.pose, i.intrinsics)) for i in (ds[i] for i in inds))
+            )
+        )
+        rgb = rgb.permute(0, 2, 3, 1)
+        xyz = get_xyz(depth, mask, pose, intrinsics)
+        mask = (~mask & (torch.rand(mask.shape, device=mask.device) > threshold))
+        rgb, xyz = rgb[mask.squeeze(1)], xyz[mask.squeeze(1)]
+        rgbs.append(rgb.detach().cpu())
+        xyzs.append(xyz.detach().cpu())
+    
+    xyzs = torch.vstack(xyzs)
+    rgbs = torch.vstack(rgbs)
+
+    merged_pcd = o3d.geometry.PointCloud()
+    merged_pcd.points = o3d.utility.Vector3dVector(xyzs)
+    merged_pcd.colors = o3d.utility.Vector3dVector(rgbs)
+    merged_downpcd = merged_pcd.voxel_down_sample(voxel_size=0.03)
+
+    o3d.io.write_point_cloud(f"pointcloud.ply", merged_downpcd)
 
 
 def get_poses(ds: Dataset[PosedRGBDItem], cache_dir: Path | None = None) -> np.ndarray:

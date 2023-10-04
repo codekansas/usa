@@ -71,7 +71,14 @@ class AStarPlanner(Planner):
         #if self.model:
         #    dis += min(self.model(self.device.tensor_to(torch.tensor([a[0], a[1], self.floor_height])))[-1].item(), 30)
         #    dis += min(self.model(self.device.tensor_to(torch.tensor([b[0], b[1], self.floor_height])))[-1].item(), 30)
-        return dis
+        afford = 0
+        for i in range(-3, 4):
+            for j in range(-3, 4):
+                if self.point_is_occupied(a[0] + i, a[1] + j):
+                    afford = max((12 / max(abs(i) + abs(j), 1)), afford)
+                if self.point_is_occupied(b[0] + i, b[1] + j):
+                    afford = max((12 / max(abs(i) + abs(j), 1)), afford)
+        return dis + afford
         #raise ValueError(f"Unknown heuristic: {self.heuristic}")
 
     def is_in_line_of_sight(self, start_pt: tuple[int, int], end_pt: tuple[int, int]) -> bool:
@@ -95,8 +102,6 @@ class AStarPlanner(Planner):
                 start_pt, end_pt = end_pt, start_pt
             for x in range(start_pt[0], end_pt[0] + 1):
                 yf = start_pt[1] + (x - start_pt[0]) / dx * dy
-                # if self.point_is_occupied(x, int(yf)):
-                #     return False
                 for y in list({math.floor(yf), math.ceil(yf)}):
                     if self.point_is_occupied(x, y):
                         return False
@@ -106,8 +111,6 @@ class AStarPlanner(Planner):
                 start_pt, end_pt = end_pt, start_pt
             for y in range(start_pt[1], end_pt[1] + 1):
                 xf = start_pt[0] + (y - start_pt[1]) / dy * dx
-                # if self.point_is_occupied(int(x), y):
-                #     return False
                 for x in list({math.floor(xf), math.ceil(xf)}):
                     if self.point_is_occupied(x, y):
                         return False

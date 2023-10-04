@@ -42,7 +42,8 @@ def get_occupancy_map_from_dataset(
     clear_around_bot_radius: float = 0.0,
     cache_dir: Path | None = None,
     ignore_cached: bool = True,
-    conservative: bool = True
+    conservative: bool = True,
+    occ_avoid: int = 3
 ) -> Map:
     """Gets the occupancy map from the given dataset.
 
@@ -132,17 +133,19 @@ def get_occupancy_map_from_dataset(
                     y0, y1 = min(max(y0, 0), ybins), min(max(y1, 0), ybins)
                     counts[y0:y1, x0:x1] = 0
                     any_counts[y0:y1, x0:x1] = True
-            
-            if conservative:
-                occ_map = ((counts >= occ_threshold) | ~any_counts).cpu().numpy()
-            else:
-                occ_map = (counts >= occ_threshold).cpu().numpy()
-            occ_map_copy = occ_map.copy()
+
+            occ_map = (counts >= occ_threshold)
+            occ_map_copy = occ_map.cpu().numpy().copy()
 
             for i in range(occ_map.shape[0]):
                 for j in range(occ_map.shape[1]):
-                    if occ_map_copy[i, j] == -1:
-                        occ_map[max(0, i - 2): min(occ_map.shape[0] - 1, i + 2), max(0, j - 2): min(occ_map.shape[1] - 1, j + 2)] = -1
+                    if occ_map_copy[i, j]:
+                        occ_map[max(0, i - occ_avoid): min(occ_map.shape[0] - 1, i + occ_avoid), max(0, j - occ_avoid): min(occ_map.shape[1] - 1, j + occ_avoid)] = -1
+            
+            if conservative:
+                occ_map = (occ_map | ~any_counts).cpu().numpy()
+            else:
+                occ_map = occ_map.cpu().numpy()
 
             if cache_loc is not None:
                 cache_loc.parent.mkdir(parents=True, exist_ok=True)

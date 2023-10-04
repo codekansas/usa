@@ -38,7 +38,7 @@ lr_scheduler:
   name: linear
 
 trainer:
-  exp_name: "4_256_no"
+  exp_name: "20231003"
   base_run_dir: "CDSLab"
   run_id: 0
   name: sl
