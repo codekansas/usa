@@ -30,11 +30,11 @@ def compute_theta(cur_x, cur_y, end_x, end_y):
         if end_x < cur_x:
             theta = theta + np.pi
         # move theta into [-pi, pi] range, for this function specifically, 
-        # (theta - 2 * pi) or (theta + 2 * pi) is enough
+        # (theta -= 2 * pi) or (theta += 2 * pi) is enough
         if theta > np.pi:
             theta = theta - 2 * np.pi
         if theta < np.pi:
-            theta + 2 * np.pi
+            theta = theta + 2 * np.pi
     return theta
 
 class ClipSdfPlanner(Planner):
@@ -296,8 +296,18 @@ class AStarPlanner(ClipSdfPlanner):
         else:
             start_pt = self.a_star_planner.to_pt(start_xy)
             reachable_pts = self.a_star_planner.get_reachable_points(start_pt)
-            reachable_points = torch.tensor([self.a_star_planner.to_xy(pt) for pt in reachable_pts])
-            x, y = reachable_points[torch.argmin(torch.linalg.norm(reachable_points - torch.tensor(end_goal), dim = -1))]
+            reachable_pts = list(reachable_pts)
+            end_pt = self.a_star_planner.to_pt(end_goal)
+            inds = torch.tensor([
+                self.a_star_planner.compute_heuristic(end_pt, reachable_pt, weight = 4, avoid = 1) 
+                + 8 * max(4 - self.a_star_planner.compute_heuristic(end_pt, reachable_pt, weight = 0), 0)
+                for reachable_pt in reachable_pts])
+            ind = torch.argmin(inds)
+            end_pt = reachable_pts[ind]
+            x, y = self.a_star_planner.to_xy(end_pt)
+
+            #reachable_points = torch.tensor([self.a_star_planner.to_xy(pt) for pt in reachable_pts])
+            #x, y = reachable_points[torch.argmin(torch.linalg.norm(reachable_points - torch.tensor(end_goal), dim = -1))]
             theta = compute_theta(x, y, end_goal[0], end_goal[1])
 
             return (float(x), float(y)), float(theta)

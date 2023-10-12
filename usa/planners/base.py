@@ -38,7 +38,7 @@ def get_occupancy_map_from_dataset(
     ds: Dataset[PosedRGBDItem],
     cell_size: float,
     occ_height_range: tuple[float, float],
-    occ_threshold: int = 20,
+    occ_threshold: int = 100,
     clear_around_bot_radius: float = 0.0,
     cache_dir: Path | None = None,
     ignore_cached: bool = True,
@@ -157,7 +157,7 @@ def get_occupancy_map_from_dataset(
 
 def get_ground_truth_map_from_dataset(
     ds, cell_size, occ_height_range,
-    occ_threshold: int = 20,
+    occ_threshold: int = 100,
     clear_around_bot_radius: float = 0.0,
     cache_dir: Path | None = None,
     ignore_cached: bool = True,

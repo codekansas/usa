@@ -10,17 +10,15 @@ task:
   name: clip_sdf
   #name: ms_clip_sdf
   dataset: r3d
-  dataset_path: "../CDSLab.r3d"
+  dataset_path: "../Meeting Room.r3d"
   points_to_sample: 50
   clip_model: "ViT_B_32"
   #scales: [30, 70, 110, 150, 190]
   queries:
     - Chair
-    - Apple
-    - Barricade
-    - Robot
-    - Clothes
-    - School bag
+    - Table
+    - Refrigerator
+    - Sink
   rotate_image: false
 
   finished:
@@ -38,8 +36,8 @@ lr_scheduler:
   name: linear
 
 trainer:
-  exp_name: "20231003"
-  base_run_dir: "CDSLab"
+  exp_name: "20231011"
+  base_run_dir: "Meeting Room"
   run_id: 0
   name: sl
   checkpoint:
