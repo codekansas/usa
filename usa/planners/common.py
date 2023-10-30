@@ -140,26 +140,28 @@ class AStarPlanner(Planner):
             The cleaned up path.
         """
 
-        i1 = 0
-        i2 = 1
-        i3 = 2
-        clean_waypoints = [path[0]]
-        for i, point in enumerate(path):
-            if i >= 2 and not self.is_a_line(path[i - 2], path[i - 1], path[i]):
-                clean_waypoints.append(path[i - 1])
-        clean_waypoints.append(path[-1])
-        return clean_waypoints
-        #cleaned_path = [path[0]]
-        #i = 0
-        #while i < len(path) - 1:
-        #    for j in range(len(path) - 1, i, -1):
-        #        if self.is_in_line_of_sight(path[i], path[j]):
-        #            break
-        #    else:
-        #        j = i + 1
-        #    cleaned_path.append(path[j])
-        #    i = j
-        #return cleaned_path
+        #i1 = 0
+        #i2 = 1
+        #i3 = 2
+        #clean_waypoints = [path[0]]
+        #for i, point in enumerate(path):
+        #    if i >= 2 and not self.is_a_line(path[i - 2], path[i - 1], path[i]):
+        #        clean_waypoints.append(path[i - 1])
+        #clean_waypoints.append(path[-1])
+        #return clean_waypoints
+        cleaned_path = [path[0]]
+        i = 0
+        while i < len(path) - 1:
+            for j in range(len(path) - 1, i, -1):
+               if self.is_in_line_of_sight(path[i], path[j]):
+                   break
+            else:
+               j = i + 1
+            if j - i >= 2:
+                cleaned_path.append(path[(i + j) // 2])
+            cleaned_path.append(path[j])
+            i = j
+        return cleaned_path
 
     def get_unoccupied_neighbor(self, pt: tuple[int, int], goal_pt: tuple[int, int] | None = None) -> tuple[int, int]:
         if not self.point_is_occupied(*pt):
