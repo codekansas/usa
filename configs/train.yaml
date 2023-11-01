@@ -10,7 +10,7 @@ task:
   name: clip_sdf
   #name: ms_clip_sdf
   dataset: r3d
-  dataset_path: "../Meeting Room.r3d"
+  dataset_path: "../Sofa.r3d"
   points_to_sample: 50
   clip_model: "ViT_B_32"
   #scales: [30, 70, 110, 150, 190]
@@ -22,7 +22,7 @@ task:
   rotate_image: false
 
   finished:
-    max_steps: 5000
+    max_steps: 15000
   dataloader:
     train:
       batch_size: 16
@@ -36,8 +36,8 @@ lr_scheduler:
   name: linear
 
 trainer:
-  exp_name: "20231011"
-  base_run_dir: "Meeting Room"
+  exp_name: "20231101"
+  base_run_dir: "Sofa"
   run_id: 0
   name: sl
   checkpoint:
