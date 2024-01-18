@@ -2,7 +2,7 @@ import logging
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterator, Sized, cast
+from typing import Iterator, Optional, Sized, cast
 
 import ml.api as ml
 import more_itertools
@@ -18,6 +18,7 @@ from usa.tasks.datasets.home_robot import (
 )
 from usa.tasks.datasets.pybullet import PyBulletDataset
 from usa.tasks.datasets.r3d import LabR3DDataset, R3DDataset, StudioR3DDataset
+from usa.tasks.datasets.r3d_precompute import MS_R3DDataset
 from usa.tasks.datasets.replica_cad import ReplicaCADDataset
 from usa.tasks.datasets.stretch import (
     chess_stretch_dataset,
@@ -26,6 +27,8 @@ from usa.tasks.datasets.stretch import (
 )
 from usa.tasks.datasets.types import PosedRGBDItem
 from usa.tasks.datasets.utils import aminmax, get_inv_intrinsics
+
+import open3d as o3d
 
 logger = logging.getLogger(__name__)
 
@@ -53,6 +56,7 @@ def get_posed_rgbd_dataset(
             path = os.environ.get("R3D_DS_PATH")
         assert path is not None, "Path must be specified for `r3d` dataset; set `R3D_DS_PATH` env var"
         return R3DDataset(path, img_dim=img_dim, random_crop=random_crop)
+        #return MS_R3DDataset(path, img_dim=img_dim, random_crop=random_crop)
     if key == "chris_lab":
         return chris_lab_home_robot_dataset()
     if key == "lab_r3d":
@@ -70,6 +74,9 @@ def get_posed_rgbd_dataset(
         return chess_stretch_dataset()
     if key.startswith("replica_"):
         return ReplicaCADDataset(key[len("replica_") :], img_dim=img_dim, random_crop=random_crop)
+    # decoding the custom r3d file, config.task.dataset should be the path to r3d file
+    else:
+        return R3DDataset(path = path, img_dim=img_dim, random_crop=random_crop)
     raise NotImplementedError(f"Unsupported dataset key: {key}")
 
 
@@ -191,6 +198,50 @@ def iter_xyz(ds: Dataset[PosedRGBDItem], desc: str, chunk_size: int = 16) -> Ite
         )
         xyz = get_xyz(depth, mask, pose, intrinsics)
         yield xyz, mask.squeeze(1)
+
+def get_pointcloud(ds: Dataset[PosedRGBDItem], chunk_size: int = 16, threshold:float = 0.9, output_file: Optional[str] = "pointcloud.ply") -> Iterator[tuple[Tensor, Tensor]]:
+    """Iterates XYZ points from the dataset.
+
+    Args:
+        ds: The dataset to iterate points from
+        desc: TQDM bar description
+        chunk_size: Process this many frames from the dataset at a time
+
+    Yields:
+        The XYZ coordinates, with shape (B, H, W, 3), and a mask where a value
+        of True means that the XYZ coordinates should be ignored at that
+        point, with shape (B, H, W)
+    """
+
+    device = ml.AutoDevice.detect_device()
+    ds_len = len(ds)  # type: ignore
+    xyzs = []
+    rgbs = []
+
+    for inds in more_itertools.chunked(tqdm.trange(ds_len, desc='point cloud'), chunk_size):
+        rgb, depth, mask, pose, intrinsics = (
+            torch.stack(ts, dim=0)
+            for ts in zip(
+                *((device.tensor_to(t) for t in (i.image, i.depth, i.mask, i.pose, i.intrinsics)) for i in (ds[i] for i in inds))
+            )
+        )
+        rgb = rgb.permute(0, 2, 3, 1)
+        xyz = get_xyz(depth, mask, pose, intrinsics)
+        mask = (~mask & (torch.rand(mask.shape, device=mask.device) > threshold))
+        rgb, xyz = rgb[mask.squeeze(1)], xyz[mask.squeeze(1)]
+        rgbs.append(rgb.detach().cpu())
+        xyzs.append(xyz.detach().cpu())
+    
+    xyzs = torch.vstack(xyzs)
+    rgbs = torch.vstack(rgbs)
+
+    merged_pcd = o3d.geometry.PointCloud()
+    merged_pcd.points = o3d.utility.Vector3dVector(xyzs)
+    merged_pcd.colors = o3d.utility.Vector3dVector(rgbs)
+    merged_downpcd = merged_pcd.voxel_down_sample(voxel_size=0.03)
+
+    if output_file is not None:
+        o3d.io.write_point_cloud(output_file, merged_downpcd)
 
 
 def get_poses(ds: Dataset[PosedRGBDItem], cache_dir: Path | None = None) -> np.ndarray:

@@ -19,6 +19,24 @@ from usa.tasks.datasets.types import PosedRGBDItem
 logger = logging.getLogger(__name__)
 
 
+def compute_theta(cur_x, cur_y, end_x, end_y):
+    theta = 0
+    if end_x == cur_x and end_y >= cur_y:
+        theta = np.pi / 2
+    elif end_x == cur_x and end_y < cur_y:
+        theta = -np.pi / 2
+    else:
+        theta = np.arctan((end_y - cur_y) / (end_x - cur_x))
+        if end_x < cur_x:
+            theta = theta + np.pi
+        # move theta into [-pi, pi] range, for this function specifically, 
+        # (theta -= 2 * pi) or (theta += 2 * pi) is enough
+        if theta > np.pi:
+            theta = theta - 2 * np.pi
+        if theta < np.pi:
+            theta = theta + 2 * np.pi
+    return theta
+
 class ClipSdfPlanner(Planner):
     def __init__(
         self,
@@ -88,13 +106,16 @@ class ClipSdfPlanner(Planner):
             )
 
         x_min, y_min = occ_map_pt_to_xy((0, 0))
-        x_max, y_max = occ_map_pt_to_xy((x_pixels, y_pixels))
+        # keep occupancy map (vl map) the same shape with sdf map
+        x_max, y_max = occ_map_pt_to_xy((x_pixels - 1, y_pixels - 1))
 
         # Gets the X, Y, and Z centers for each element in the grid.
         xs, ys, zs = torch.meshgrid(
             torch.arange(x_min, x_max, self.occ_map.resolution),
             torch.arange(y_min, y_max, self.occ_map.resolution),
-            torch.tensor([self.min_z, self.max_z]),
+            #torch.tensor([self.min_z, self.max_z]),
+            #torch.tensor([self.min_z, (self.min_z + self.max_z) / 2,  self.max_z]),
+            torch.arange(self.min_z, self.max_z, 0.2),
             indexing="xy",
         )
 
@@ -115,8 +136,8 @@ class ClipSdfPlanner(Planner):
         for xyz_chunk in tqdm.tqdm(torch.split(xyzs, 64)):
             # This is the old implementation, which just checks if the center
             # of a cell is occupied when building the occupancy grid.
-            # sdf = self.model(xyz_chunk)[:, -1]
-            # all_sdfs.append((sdf < self.occ_avoid_radius).cpu())
+            #sdf = self.model(xyz_chunk)[:, -1]
+            #all_sdfs.append((sdf < self.occ_avoid_radius).cpu())
 
             # Thresholds the SDFs for the corners. This is kind of inefficient
             # because there is some duplication between the corners, but it
@@ -170,8 +191,9 @@ class AStarPlanner(ClipSdfPlanner):
         heuristic: Heuristic,
         resolution: float,
         cache_dir: Path | None = None,
-        floor_height: float = 0.1,
-        ceil_height: float = 1.3,
+        floor_height: float = -1,
+        ceil_height: float = 0,
+        occ_avoid_radius: float = 0.3
     ) -> None:
         super().__init__(
             dataset=dataset,
@@ -182,6 +204,7 @@ class AStarPlanner(ClipSdfPlanner):
             cache_dir=cache_dir,
             floor_height=floor_height,
             ceil_height=ceil_height,
+            occ_avoid_radius = occ_avoid_radius
         )
 
         # Gets the map from the parent class.
@@ -193,6 +216,10 @@ class AStarPlanner(ClipSdfPlanner):
             is_occ=clip_sdf_map.grid,
             origin=clip_sdf_map.origin,
             resolution=clip_sdf_map.resolution,
+            model = model,
+            device = device,
+            floor_height=floor_height,
+            ceil_height=ceil_height
         )
 
     def plan(
@@ -201,16 +228,24 @@ class AStarPlanner(ClipSdfPlanner):
         end_xy: tuple[float, float] | None = None,
         end_goal: str | None = None,
         remove_line_of_sight_points: bool = True,
-    ) -> list[tuple[float, float]]:
+    ) -> list[tuple[float, float, float]]:
         if end_goal is not None:
             assert end_xy is None, "Cannot specify both end_xy and end_goal"
-            end_xy = self.get_end_xy(start_xy, end_goal)
-
-        return self.a_star_planner.plan(
+            end_xy, end_theta = self.get_end_xy(start_xy, end_goal)
+        if end_xy is not None:
+            assert end_goal is None, "Cannot specify both end_xy and end_goal"
+            end_xy, end_theta = self.get_end_xy(start_xy, end_xy)
+        waypoints = self.a_star_planner.plan(
             start_xy=start_xy,
             end_xy=end_xy,
             remove_line_of_sight_points=remove_line_of_sight_points,
         )
+        xyt_points = []
+        for i in range(len(waypoints) - 1):
+            theta = compute_theta(waypoints[i][0], waypoints[i][1], waypoints[i + 1][0], waypoints[i + 1][1])
+            xyt_points.append((waypoints[i][0], waypoints[i][1], float(theta)))
+        xyt_points.append((waypoints[-1][0], waypoints[-1][1], end_theta))
+        return xyt_points
 
     @functools.lru_cache
     def get_score_map(self, end_goal: str) -> np.ndarray:
@@ -228,28 +263,54 @@ class AStarPlanner(ClipSdfPlanner):
         all_clip_sims = []
         for xyz_chunk in tqdm.tqdm(torch.split(xyzs, 64)):
             clip_embs = self.model(xyz_chunk)[:, :-1]
-            tok_scores = embs @ clip_embs.T
+            #tok_scores = embs @ clip_embs.T
+            tok_scores = torch.cosine_similarity(embs, clip_embs)
             all_clip_sims.append(tok_scores.flatten(0).detach().cpu())
 
         return torch.cat(all_clip_sims, dim=0).view(xs.shape).max(dim=-1, keepdim=True).values.numpy()
 
-    def get_end_xy(self, start_xy: tuple[float, float], end_goal: str) -> tuple[float, float]:
-        score_map = self.get_score_map(end_goal)
-        start_pt = self.a_star_planner.to_pt(start_xy)
-        reachable_pts = self.a_star_planner.get_reachable_points(start_pt)
-        xs, ys = zip(*reachable_pts)
-        reachable_map = np.zeros_like(score_map, dtype=bool)
-        reachable_map[ys, xs] = True
+    def get_end_xy(self, start_xy: tuple[float, float], end_goal):
+        if type(end_goal) == type(''):
+            score_map = self.get_score_map(end_goal)
+            start_pt = self.a_star_planner.to_pt(start_xy)
+            reachable_pts = self.a_star_planner.get_reachable_points(start_pt)
 
-        # Gets the (X, Y) index of the highest scoring unoccupied point.
-        unocc_points = np.argwhere(reachable_map)
-        best_point_index = np.argmax(score_map[unocc_points[:, 0], unocc_points[:, 1]])
-        y, x, _ = unocc_points[best_point_index]
+            #TODO
+            # If the end_goal is text query, search through unreachable_pts instead
 
-        assert not self.a_star_planner.point_is_occupied(x, y), "Best point is occupied"
+            xs, ys = zip(*reachable_pts)
+            reachable_map = np.zeros_like(score_map, dtype=bool)
+            reachable_map[ys, xs] = True
 
-        # Converts to (X, Y) coordinates.
-        return self.a_star_planner.to_xy((x, y))
+            # Gets the (X, Y) index of the highest scoring unoccupied point.
+            unocc_points = np.argwhere(reachable_map)
+            best_point_index = np.argmax(score_map[unocc_points[:, 0], unocc_points[:, 1]])
+            y, x, _ = unocc_points[best_point_index]
+            theta = 0
+
+            assert not self.a_star_planner.point_is_occupied(x, y), "Best point is occupied"
+
+            # Converts to (X, Y) coordinates.
+            return self.a_star_planner.to_xy((x, y)), theta
+
+        else:
+            start_pt = self.a_star_planner.to_pt(start_xy)
+            reachable_pts = self.a_star_planner.get_reachable_points(start_pt)
+            reachable_pts = list(reachable_pts)
+            end_pt = self.a_star_planner.to_pt(end_goal)
+            inds = torch.tensor([
+                self.a_star_planner.compute_heuristic(end_pt, reachable_pt, weight = 4, avoid = 1) 
+                + 8 * max(4 - self.a_star_planner.compute_heuristic(end_pt, reachable_pt, weight = 0), 0)
+                for reachable_pt in reachable_pts])
+            ind = torch.argmin(inds)
+            end_pt = reachable_pts[ind]
+            x, y = self.a_star_planner.to_xy(end_pt)
+
+            #reachable_points = torch.tensor([self.a_star_planner.to_xy(pt) for pt in reachable_pts])
+            #x, y = reachable_points[torch.argmin(torch.linalg.norm(reachable_points - torch.tensor(end_goal), dim = -1))]
+            theta = compute_theta(x, y, end_goal[0], end_goal[1])
+
+            return (float(x), float(y)), float(theta)
 
     def is_valid_starting_point(self, xy: tuple[float, float]) -> bool:
         return self.a_star_planner.is_valid_starting_point(xy)
@@ -274,8 +335,9 @@ class GradientPlanner(ClipSdfPlanner):
         num_optimization_steps: int = 1000,
         min_distance: float = 1e-5,
         cache_dir: Path | None = None,
-        floor_height: float = 0.1,
-        ceil_height: float = 1.3,
+        floor_height: float = -1,
+        ceil_height: float = 0,
+        occ_avoid_radius: float = 0.3
     ) -> None:
         # Constant resolution.
         visualization_resolution = 0.025
@@ -290,6 +352,7 @@ class GradientPlanner(ClipSdfPlanner):
             cache_dir=None if cache_dir is None else cache_dir / "gradient",
             floor_height=floor_height,
             ceil_height=ceil_height,
+            occ_avoid_radius = occ_avoid_radius
         )
 
         # Gradient planner parameters.
@@ -312,6 +375,7 @@ class GradientPlanner(ClipSdfPlanner):
             cache_dir=None if cache_dir is None else cache_dir / "base_planner",
             floor_height=floor_height,
             ceil_height=ceil_height,
+            occ_avoid_radius = occ_avoid_radius
         )
 
     def get_target_query_emb(self, end_goal: str) -> Tensor:
@@ -333,20 +397,26 @@ class GradientPlanner(ClipSdfPlanner):
 
         # Gets a seed path from the base planner.
         seed_path = self.base_planner.plan(start_xy, end_xy, end_goal, remove_line_of_sight_points=False)
-        xys = self.device.tensor_to(torch.tensor(seed_path))
+        xyts = self.device.tensor_to(torch.tensor(seed_path))
+        xys = xyts[:, :2]
         xys.requires_grad_(True)
 
         def get_losses(xys: Tensor) -> dict[str, Tensor]:
             # Loss for avoiding obstacles.
             waypoint_xyz_min = torch.cat([xys[1:], torch.full_like(xys[1:, :1], self.min_z)], dim=-1)
+            waypoint_xyz_mid = torch.cat([xys[1:], torch.full_like(xys[1:, :1], (self.max_z + self.min_z)/2)], dim=-1)
             waypoint_xyz_max = torch.cat([xys[1:], torch.full_like(xys[1:, :1], self.max_z)], dim=-1)
             preds_min = self.model(waypoint_xyz_min)
+            preds_mid = self.model(waypoint_xyz_mid)
             preds_max = self.model(waypoint_xyz_max)
             clip_preds_min, sdf_preds_min = preds_min[-1:, :-1], preds_min[..., -1]
+            clip_preds_mid, sdf_preds_mid = preds_mid[-1:, :-1], preds_mid[..., -1]
             clip_preds_max, sdf_preds_max = preds_max[-1:, :-1], preds_max[..., -1]
             sdf_preds = torch.stack([sdf_preds_min, sdf_preds_max], dim=-1).min(-1).values
+            #sdf_preds = torch.stack([sdf_preds_min, sdf_preds_mid, sdf_preds_max], dim=-1).min(-1).values
             # is_inside_obs = sdf_preds < self.occ_avoid_radius + 1e-3
-            occ_loss = torch.clamp_min(self.occ_avoid_radius - sdf_preds, 0).sum()
+            occ_loss = torch.clamp_min(self.occ_avoid_radius - sdf_preds, self.occ_avoid_radius - 0.6).sum()
+            #occ_loss = (self.occ_avoid_radius - sdf_preds).sum()
 
             norms = torch.norm(xys[1:] - xys[:-1], dim=-1)
 
@@ -367,10 +437,10 @@ class GradientPlanner(ClipSdfPlanner):
             # Embedding loss for the final waypoint; try to maximize the
             # similarity between it's clip embedding and the target embedding.
             if target_emb is not None:
-                sim_score_min = clip_preds_min @ target_emb.T
-                sim_score_max = clip_preds_max @ target_emb.T
+                sim_score_min = torch.cosine_similarity(clip_preds_min, target_emb.T)
+                sim_score_mid = torch.cosine_similarity(clip_preds_mid, target_emb.T)
+                sim_score_max = torch.cosine_similarity(clip_preds_max, target_emb.T)
                 sim_score = torch.cat([sim_score_min, sim_score_max]).max()
-                # sim_score = torch.where(is_inside_obs[-1], torch.zeros_like(sim_score), sim_score)
                 sim_loss = -sim_score
                 losses["sim"] = sim_loss * self.sim_loss_weight
 
@@ -379,7 +449,6 @@ class GradientPlanner(ClipSdfPlanner):
         # Optimization loop, just using gradient descent.
         prev_xys: Tensor | None = None
 
-        # opt = torch.optim.Adam([xys], lr=self.lr)
         opt = torch.optim.SGD([xys], lr=self.lr, momentum=0.9)
 
         for _ in tqdm.trange(self.num_optimization_steps):
@@ -411,12 +480,15 @@ class GradientPlanner(ClipSdfPlanner):
             #     tqdm.tqdm.write(f"diff: {(xys - prev_xys).norm().item()}")
             prev_xys = xys.detach().clone()
 
-        points = [(x, y) for x, y in xys.detach().cpu().numpy().tolist()]  # pylint: disable=unnecessary-comprehension
-
+        waypoints = [(x, y) for x, y in xys.detach().cpu().numpy().tolist()]  # pylint: disable=unnecessary-comprehension
         # Explicitly delete the optimizer and points.
         del opt, xys
-
-        return points
+        xyt_points = []
+        for i in range(len(waypoints) - 1):
+            theta = compute_theta(waypoints[i][0], waypoints[i][1], waypoints[i + 1][0], waypoints[i + 1][1])
+            xyt_points.append((waypoints[i][0], waypoints[i][1], float(theta)))
+        xyt_points.append(seed_path[-1])
+        return xyt_points
 
     def is_valid_starting_point(self, xy: tuple[float, float]) -> bool:
         min_xyz, max_xyz = (xy[0], xy[1], self.min_z), (xy[0], xy[1], self.max_z)

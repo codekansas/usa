@@ -1,0 +1,58 @@
+model:
+  #name: ms_point2emb
+  name: point2emb
+  num_layers: 4
+  hidden_dims: 256
+  output_dims: 513
+  #output_dims: 512  # CLIP dimensions = 512 + SDF = 1
+
+task:
+  name: clip_sdf
+  #name: ms_clip_sdf
+  dataset: r3d
+  # dataset_path: "../Sofa.r3d"
+  dataset_path: chris1.r3d
+  points_to_sample: 50
+  clip_model: "ViT_B_32"
+  #scales: [30, 70, 110, 150, 190]
+  queries:
+    - Chair
+    - Table
+    - Refrigerator
+    - Sink
+  rotate_image: false
+
+  finished:
+    max_steps: 15000
+  dataloader:
+    train:
+      batch_size: 16
+      num_workers: 0
+      persistent_workers: false
+
+optimizer:
+  name: adam
+
+lr_scheduler:
+  name: linear
+
+trainer:
+  exp_name: "20231101"
+  base_run_dir: "Sofa"
+  run_id: 0
+  name: sl
+  checkpoint:
+    save_every_n_steps: 2000
+    only_save_most_recent: true
+  validation:
+    valid_every_n_steps: 250
+    num_init_valid_steps: 1
+
+logger:
+  - name: stdout
+#  - name: tensorboard
+
+launcher:
+  name: slurm
+  num_nodes: 1
+  gpus_per_node: 1

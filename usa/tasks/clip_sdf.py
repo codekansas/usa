@@ -12,6 +12,8 @@ import tqdm
 from omegaconf import MISSING
 from torch import Tensor
 from torch.utils.data.dataset import Dataset
+import clip
+from torchvision import transforms
 
 from usa.models.clip import (
     CLIPTokenizer,
@@ -27,6 +29,8 @@ from usa.tasks.datasets.utils import (
     get_xy_pixel_from_xyz,
     get_xyz_coordinates,
 )
+
+import wandb
 
 logger = logging.getLogger(__name__)
 
@@ -134,6 +138,11 @@ class ClipSdfTask(ml.SupervisedLearningTask[ClipSdfTaskConfig, Model, Batch, Out
         self.register_buffer("pose_bounds", torch.zeros(3, 2))
 
         self.clip = ClipModel(config.clip_model)
+        #_, self.preprocessor = clip.load('ViT-B/32', device = ('cuda' if torch.cuda.is_available() else 'cpu'))
+        self.preprocessor = transforms.Normalize(mean=(0.48145466, 0.4578275, 0.40821073), std=(0.26862954, 0.26130258, 0.27577711))
+        #self.clip.eval()
+        #self.clip = self.clip.float()
+        #self.clip.linguistic = self.clip.encode_text
 
     def _apply(self, fn: Any) -> Any:
         self.clip.visual._apply(fn)
@@ -145,6 +154,10 @@ class ClipSdfTask(ml.SupervisedLearningTask[ClipSdfTaskConfig, Model, Batch, Out
         self.clip.linguistic.apply(fn)
         return super().apply(fn)
 
+    def _get_posed_rgb_dataset(self) -> Dataset[PosedRGBDItem]:
+        return get_posed_rgbd_dataset(self.config.dataset, path=self.config.dataset_path)
+
+    @functools.cached_property
     def _dataset(self) -> Dataset[PosedRGBDItem]:
         return get_posed_rgbd_dataset(self.config.dataset, path=self.config.dataset_path)
 
@@ -167,7 +180,7 @@ class ClipSdfTask(ml.SupervisedLearningTask[ClipSdfTaskConfig, Model, Batch, Out
         sample_mask = torch.rand_like(mask, dtype=depth.dtype)
         q = torch.quantile(
             (sample_mask.cpu() if mask.device.type == "mps" else sample_mask).float(),
-            self.config.points_to_sample / sample_mask.numel(),
+            (mask.shape[0] * self.config.points_to_sample) / sample_mask.numel(),
         ).to(sample_mask)
         mask = mask | (sample_mask > q)
         sampled_xyz = get_xyz_coordinates(depth_frac * depth, mask, pose, intrinsics).to(depth)
@@ -205,10 +218,11 @@ class ClipSdfTask(ml.SupervisedLearningTask[ClipSdfTaskConfig, Model, Batch, Out
                 crop_image = crop_result[0]
                 if self.config.rotate_image:
                     crop_image = V.rotate(crop_image, -90)
+                #crop_image = torch.stack([self.preprocessor(V.to_pil_image(img)) for img in crop_image], dim = 0).to(preds)
                 clip = self.clip.visual(crop_image)
 
             # Gets the CLIP embeddings for the cropped images.
-            clip = None if crop_result is None else self.clip.visual(crop_result[0])
+            #clip = None if crop_result is None else self.clip.visual(crop_result[0])
 
             # Gets the SDF values.
             sdf = torch.norm(nearest_xyz - xyz, p=2, dim=1)
@@ -237,6 +251,20 @@ class ClipSdfTask(ml.SupervisedLearningTask[ClipSdfTaskConfig, Model, Batch, Out
         self.logger.log_scalar("pmax", pmax)
 
         if state.phase == "valid":
+            if wandb.run is not None:
+                wandb.log({"sdf": torch.sum(losses["sdf"]).item()}, step = state.num_steps)
+            if "clip" in losses and wandb.run is not None:
+                wandb.log({"clip": torch.sum(losses["clip"]).item()}, step = state.num_steps)
+            clip_images, sdf_image = self.get_clip_and_sdf_images(model, device, preds.dtype)
+            for i in range(len(clip_images)):
+                if wandb.run is not None:
+                    wandb.log({self.config.queries[i] + " score map": wandb.Image(
+                            clip_images[i])
+                          }, step = state.num_steps)
+            if wandb.run is not None:
+                wandb.log({"sdf prediction": wandb.Image(
+                            sdf_image)
+                          }, step = state.num_steps)
             # clip_image, sdf_image = self.get_clip_and_sdf_images(model, device, preds.dtype)
             # self.logger.log_image("sdf", sdf_image)
             self.logger.log_point_cloud("xyz", torch.stack([xyz, nearest_xyz.to(xyz)]))
@@ -295,7 +323,7 @@ class ClipSdfTask(ml.SupervisedLearningTask[ClipSdfTaskConfig, Model, Batch, Out
             return clip_preds.permute(2, 0, 1), sdf_preds
 
     def get_dataset(self, phase: ml.Phase) -> Dataset[PosedRGBDItem]:
-        return self._dataset()
+        return self._dataset
 
 
 def test_sdf_dataset(max_samples: int = 3) -> None:

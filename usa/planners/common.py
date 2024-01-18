@@ -4,6 +4,7 @@ import math
 from typing import Literal
 
 import numpy as np
+import torch
 
 from usa.planners.base import Map, Planner
 
@@ -21,6 +22,10 @@ class AStarPlanner(Planner):
         is_occ: np.ndarray,
         origin: tuple[float, float],
         resolution: float,
+        model = None,
+        device = None,
+        floor_height=None,
+        ceil_height=None
     ) -> None:
         super().__init__()
 
@@ -28,12 +33,20 @@ class AStarPlanner(Planner):
         self.is_occ = is_occ
         self.origin = origin
         self.resolution = resolution
+        self.model = model
+        self.device = device
+        self.floor_height = floor_height
+        self.ceil_height = ceil_height
 
     def point_is_occupied(self, x: int, y: int) -> bool:
-        occ_map = self.get_map()
-        if x < 0 or y < 0 or x >= occ_map.grid.shape[1] or y >= occ_map.grid.shape[0]:
+        #occ_map = self.get_map()
+        #if x < 0 or y < 0 or x >= occ_map.grid.shape[1] or y >= occ_map.grid.shape[0]:
+        #    return True
+        #return bool(occ_map.grid[y][x])
+        occ_map = self.is_occ
+        if x < 0 or y < 0 or x >= occ_map.shape[1] or y >= occ_map.shape[0]:
             return True
-        return bool(occ_map.grid[y][x])
+        return bool(occ_map[y][x])
 
     def xy_is_occupied(self, x: float, y: float) -> bool:
         return self.point_is_occupied(*self.to_pt((x, y)))
@@ -44,18 +57,29 @@ class AStarPlanner(Planner):
     def to_xy(self, pt: tuple[int, int]) -> tuple[float, float]:
         return self.get_map().to_xy(pt)
 
-    def compute_heuristic(self, a: tuple[int, int], b: tuple[int, int]) -> float:
+    def compute_heuristic(self, a: tuple[int, int], b: tuple[int, int], weight = 12, avoid = 3) -> float:
         if self.heuristic == "manhattan":
-            return abs(a[0] - b[0]) + abs(a[1] - b[1])
+            dis = abs(a[0] - b[0]) + abs(a[1] - b[1])
         if self.heuristic == "euclidean":
-            return ((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2) ** 0.5
+            dis = ((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2) ** 0.5
         if self.heuristic == "octile":
             dx = abs(a[0] - b[0])
             dy = abs(a[1] - b[1])
-            return (dx + dy) + (1 - 2) * min(dx, dy)
+            dis = (dx + dy) + (1 - 2) * min(dx, dy)
         if self.heuristic == "chebyshev":
-            return max(abs(a[0] - b[0]), abs(a[1] - b[1]))
-        raise ValueError(f"Unknown heuristic: {self.heuristic}")
+            dis = max(abs(a[0] - b[0]), abs(a[1] - b[1]))
+        #if self.model:
+        #    dis += min(self.model(self.device.tensor_to(torch.tensor([a[0], a[1], self.floor_height])))[-1].item(), 30)
+        #    dis += min(self.model(self.device.tensor_to(torch.tensor([b[0], b[1], self.floor_height])))[-1].item(), 30)
+        afford_a, afford_b = 0, 0
+        for i in range(-avoid, avoid + 1):
+            for j in range(-avoid, avoid + 1):
+                if self.point_is_occupied(a[0] + i, a[1] + j):
+                    afford_a = max((weight / max(abs(i) + abs(j), 1)), afford_a)
+                if self.point_is_occupied(b[0] + i, b[1] + j):
+                    afford_b = max((weight / max(abs(i) + abs(j), 1)), afford_b)
+        return dis + afford_a + afford_b
+        #raise ValueError(f"Unknown heuristic: {self.heuristic}")
 
     def is_in_line_of_sight(self, start_pt: tuple[int, int], end_pt: tuple[int, int]) -> bool:
         """Checks if there is a line-of-sight between two points.
@@ -78,8 +102,6 @@ class AStarPlanner(Planner):
                 start_pt, end_pt = end_pt, start_pt
             for x in range(start_pt[0], end_pt[0] + 1):
                 yf = start_pt[1] + (x - start_pt[0]) / dx * dy
-                # if self.point_is_occupied(x, int(yf)):
-                #     return False
                 for y in list({math.floor(yf), math.ceil(yf)}):
                     if self.point_is_occupied(x, y):
                         return False
@@ -89,13 +111,18 @@ class AStarPlanner(Planner):
                 start_pt, end_pt = end_pt, start_pt
             for y in range(start_pt[1], end_pt[1] + 1):
                 xf = start_pt[0] + (y - start_pt[1]) / dy * dx
-                # if self.point_is_occupied(int(x), y):
-                #     return False
                 for x in list({math.floor(xf), math.ceil(xf)}):
                     if self.point_is_occupied(x, y):
                         return False
 
         return True
+
+    def is_a_line(self, a, b, c):
+        if a[0] == b[0]:
+            return c[0] == a[0]
+        if b[0] == c[0]:
+            return False
+        return ((c[1] - b[1]) / (c[0] - b[0])) == ((b[1] - a[1]) / (b[0] - a[0]))
 
     def clean_path(self, path: list[tuple[int, int]]) -> list[tuple[int, int]]:
         """Cleans up the final path.
@@ -113,14 +140,25 @@ class AStarPlanner(Planner):
             The cleaned up path.
         """
 
+        #i1 = 0
+        #i2 = 1
+        #i3 = 2
+        #clean_waypoints = [path[0]]
+        #for i, point in enumerate(path):
+        #    if i >= 2 and not self.is_a_line(path[i - 2], path[i - 1], path[i]):
+        #        clean_waypoints.append(path[i - 1])
+        #clean_waypoints.append(path[-1])
+        #return clean_waypoints
         cleaned_path = [path[0]]
         i = 0
         while i < len(path) - 1:
             for j in range(len(path) - 1, i, -1):
-                if self.is_in_line_of_sight(path[i], path[j]):
-                    break
+               if self.is_in_line_of_sight(path[i], path[j]):
+                   break
             else:
-                j = i + 1
+               j = i + 1
+            if j - i >= 2:
+                cleaned_path.append(path[(i + j) // 2])
             cleaned_path.append(path[j])
             i = j
         return cleaned_path
@@ -223,7 +261,8 @@ class AStarPlanner(Planner):
         if remove_line_of_sight_points:
             path = self.clean_path(path)
 
-        return [start_xy] + [self.to_xy(pt) for pt in path[1:-1]] + [end_xy]
+        #return [start_xy] + [self.to_xy(pt) for pt in path[1:-1]] + [end_xy]
+        return [start_xy] + [self.to_xy(pt) for pt in path[1:]]
 
     def is_valid_starting_point(self, xy: tuple[float, float]) -> bool:
         return not self.point_is_occupied(*self.to_pt(xy))
