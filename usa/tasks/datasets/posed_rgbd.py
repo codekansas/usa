@@ -2,7 +2,7 @@ import logging
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterator, Sized, cast
+from typing import Iterator, Optional, Sized, cast
 
 import ml.api as ml
 import more_itertools
@@ -199,7 +199,7 @@ def iter_xyz(ds: Dataset[PosedRGBDItem], desc: str, chunk_size: int = 16) -> Ite
         xyz = get_xyz(depth, mask, pose, intrinsics)
         yield xyz, mask.squeeze(1)
 
-def get_pointcloud(ds: Dataset[PosedRGBDItem], chunk_size: int = 16, threshold:float = 0.9) -> Iterator[tuple[Tensor, Tensor]]:
+def get_pointcloud(ds: Dataset[PosedRGBDItem], chunk_size: int = 16, threshold:float = 0.9, output_file: Optional[str] = "pointcloud.ply") -> Iterator[tuple[Tensor, Tensor]]:
     """Iterates XYZ points from the dataset.
 
     Args:
@@ -240,7 +240,8 @@ def get_pointcloud(ds: Dataset[PosedRGBDItem], chunk_size: int = 16, threshold:f
     merged_pcd.colors = o3d.utility.Vector3dVector(rgbs)
     merged_downpcd = merged_pcd.voxel_down_sample(voxel_size=0.03)
 
-    o3d.io.write_point_cloud(f"pointcloud.ply", merged_downpcd)
+    if output_file is not None:
+        o3d.io.write_point_cloud(output_file, merged_downpcd)
 
 
 def get_poses(ds: Dataset[PosedRGBDItem], cache_dir: Path | None = None) -> np.ndarray:
