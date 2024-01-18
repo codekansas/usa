@@ -144,11 +144,23 @@ def read_metadata(r3d_file: ZipFile, use_depth_shape: bool) -> Metadata:
     with r3d_file.open("metadata", "r") as f:
         metadata_dict = json.load(f)
 
+    if "dh" in metadata_dict and "dw" in metadata_dict:
+        depth_shape = (metadata_dict["dh"], metadata_dict["dw"])
+    else:
+        depth_shape = (256, 192)
+        print(f"WARNING: depth parameters not found! using default {depth_shape=}")
+
+    if "frameTimestamps" in metadata_dict:
+        timestamps = np.array(metadata_dict["frameTimestamps"], dtype=np.float64)
+    else:
+        print("WARNING: timestamps not found!")
+        timestamps = np.arange(len(metadata_dict["poses"])) / metadata_dict["fps"]
+
     metadata = Metadata(
         rgb_shape=(metadata_dict["h"], metadata_dict["w"]),
-        depth_shape=(metadata_dict["dh"], metadata_dict["dw"]),
+        depth_shape=depth_shape,
         fps=metadata_dict["fps"],
-        timestamps=np.array(metadata_dict["frameTimestamps"], dtype=np.float64),
+        timestamps=timestamps,
         intrinsics=np.array(metadata_dict["K"], dtype=np.float64).reshape(3, 3).T,
         poses=np.stack([as_pose_matrix(pose) for pose in metadata_dict["poses"]], axis=0),
         start_pose=as_pose_matrix(metadata_dict["initPose"]),
